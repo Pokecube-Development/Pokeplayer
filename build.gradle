@@ -69,7 +69,7 @@ minecraft {
     version = "${version_long}"
     runDir = "run"
     mappings = "${version_mappings}"
-    useDepAts = false
+    useDepAts = true
     
     replace "@VERSION@", project.version_compile
     replaceIn "Reference.java"
