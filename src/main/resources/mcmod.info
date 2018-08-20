@@ -1,0 +1,17 @@
+[
+{
+  "modid": "pokeplayer",
+  "name": "Pokecube Mystery Dungeon",
+  "description": "Play as a Pokemob!",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "logoFile": "pokecube_logo.png",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Thutmose"],
+  "credits": "",
+  "parent": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
