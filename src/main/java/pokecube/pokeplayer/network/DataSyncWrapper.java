@@ -1,24 +1,53 @@
 package pokecube.pokeplayer.network;
 
-import net.minecraft.util.EnumFacing;
-import net.minecraftforge.common.capabilities.Capability;
+import java.util.List;
+
+import thut.api.world.mobs.data.Data;
 import thut.api.world.mobs.data.DataSync;
 import thut.core.common.world.mobs.data.DataSync_Impl;
-import thut.core.common.world.mobs.data.SyncHandler;
 
 public class DataSyncWrapper extends DataSync_Impl
 {
     public DataSync wrapped = this;
 
     @Override
-    public boolean hasCapability(Capability<?> capability, EnumFacing facing)
+    public List<Data<?>> getAll()
     {
-        return capability == SyncHandler.CAP;
+        if (wrapped == this) return null;
+        return wrapped.getAll();
     }
 
     @Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+    public List<Data<?>> getDirty()
     {
-        return hasCapability(capability, facing) ? SyncHandler.CAP.cast(wrapped) : null;
+        if (wrapped == this) return null;
+        return wrapped.getDirty();
     }
+
+    @Override
+    public <T> T get(int key)
+    {
+        if (wrapped == this) return null;
+        return wrapped.get(key);
+    }
+
+    @Override
+    public <T> int register(Data<T> data, T value)
+    {
+        return 0;
+    }
+
+    @Override
+    public <T> void set(int key, T value)
+    {
+        if (wrapped == this) return;
+        wrapped.set(key, value);
+    }
+
+    @Override
+    public void update(List<Data<?>> values)
+    {
+        wrapped.update(values);
+    }
+
 }

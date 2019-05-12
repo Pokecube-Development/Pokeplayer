@@ -226,7 +226,7 @@ public class PokeInfo extends PlayerData
                 if (d < 0.9 * h) player.motionY += 0.1;
                 else player.motionY = 0;
             }
-            else
+            else if (player.motionY < 0 && !noFloat)
             {
                 player.motionY *= 0.6;
             }
