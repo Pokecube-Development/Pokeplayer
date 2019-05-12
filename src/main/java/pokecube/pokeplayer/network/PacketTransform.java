@@ -1,11 +1,11 @@
 package pokecube.pokeplayer.network;
 
 import java.io.IOException;
-import java.util.logging.Level;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
@@ -16,12 +16,27 @@ import pokecube.core.PokecubeCore;
 import pokecube.core.handlers.PokecubePlayerDataHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
+import pokecube.core.interfaces.pokemob.ai.LogicStates;
 import pokecube.pokeplayer.PokeInfo;
 
 public class PacketTransform implements IMessage, IMessageHandler<PacketTransform, IMessage>
 {
     public NBTTagCompound data = new NBTTagCompound();
     public int            id;
+
+    public static void sendPacket(EntityPlayer toSend, EntityPlayerMP sendTo)
+    {
+        PokecubeMod.packetPipeline.sendTo(getPacket(toSend), sendTo);
+    }
+
+    public static PacketTransform getPacket(EntityPlayer toSend)
+    {
+        PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(toSend).getData(PokeInfo.class);
+        PacketTransform message = new PacketTransform();
+        info.writeToNBT(message.data);
+        message.id = toSend.getEntityId();
+        return message;
+    }
 
     public PacketTransform()
     {
@@ -73,15 +88,18 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
             {
                 PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                 IPokemob pokemob = info.getPokemob(world);
-                if (pokemob == null)
-                {
-                    PokecubeMod.log(Level.WARNING, "Error with pokemob? " + message.data);
-                    return;
-                }
+                if (pokemob == null) { return; }
                 float health = message.data.getFloat("H");
                 if (pokemob.getEntity() == null) return;
-                pokemob.getEntity().setHealth(health);
+                pokemob.setHealth(health);
                 player.setHealth(health);
+            }
+            else if (message.data.hasKey("S"))
+            {
+                PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+                IPokemob pokemob = info.getPokemob(world);
+                if (pokemob == null) { return; }
+                pokemob.setLogicState(LogicStates.SITTING, message.data.getBoolean("S"));
             }
             return;
         }

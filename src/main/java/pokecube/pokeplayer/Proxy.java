@@ -7,12 +7,9 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 import pokecube.core.handlers.PokecubePlayerDataHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.utils.EntityTools;
-import pokecube.pokeplayer.inventory.ContainerPokemob;
 
 public class Proxy implements IGuiHandler
 {
-    public static final int POKEMOBGUI = 0;
-
     public void setPokemob(EntityPlayer player, IPokemob pokemob)
     {
         setMapping(player, pokemob);
@@ -62,7 +59,6 @@ public class Proxy implements IGuiHandler
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
     {
-        if (ID == POKEMOBGUI && getPokemob(player) != null) { return new ContainerPokemob(player); }
         return null;
     }
 

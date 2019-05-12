@@ -12,13 +12,13 @@ import pokecube.core.interfaces.IMoveNames;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.interfaces.pokemob.IHasCommands.Command;
+import pokecube.core.interfaces.pokemob.commandhandlers.AttackEntityHandler;
 import pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler;
 import pokecube.core.interfaces.pokemob.commandhandlers.AttackNothingHandler;
 import pokecube.core.interfaces.pokemob.commandhandlers.TeleportHandler;
+import pokecube.core.network.pokemobs.PacketCommand;
 import pokecube.core.utils.Tools;
 import pokecube.pokeplayer.PokePlayer;
-import pokecube.pokeplayer.network.PacketDoActions;
-import pokecube.pokeplayer.network.PokePlayerAttackEntityHandler;
 import thut.api.maths.Vector3;
 
 public class GuiAsPokemob extends GuiDisplayPokecubeInfo
@@ -78,21 +78,21 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
                     return;
                 }
                 GuiTeleport.instance().setState(false);
-                PacketDoActions.sendCommand(pokemob, Command.TELEPORT, new TeleportHandler());
+                PacketCommand.sendCommand(pokemob, Command.TELEPORT, new TeleportHandler());
                 return;
             }
         }
         if (target != null && !sameOwner && target instanceof EntityLivingBase)
         {
-        	PacketDoActions.sendCommand(pokemob, Command.ATTACKENTITY, new PokePlayerAttackEntityHandler(target.getEntityId()));
+            PacketCommand.sendCommand(pokemob, Command.ATTACKENTITY, new AttackEntityHandler(target.getEntityId()));
         }
         else if (targetLocation != null)
         {
-        	PacketDoActions.sendCommand(pokemob, Command.ATTACKLOCATION, new AttackLocationHandler(targetLocation));
+            PacketCommand.sendCommand(pokemob, Command.ATTACKLOCATION, new AttackLocationHandler(targetLocation));
         }
         else
         {
-        	PacketDoActions.sendCommand(pokemob, Command.ATTACKNOTHING, new AttackNothingHandler());
+            PacketCommand.sendCommand(pokemob, Command.ATTACKNOTHING, new AttackNothingHandler());
         }
     }
 

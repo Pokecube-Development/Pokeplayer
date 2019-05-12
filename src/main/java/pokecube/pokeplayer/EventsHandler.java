@@ -1,21 +1,32 @@
 package pokecube.pokeplayer;
 
+import java.util.HashSet;
 import java.util.UUID;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.relauncher.Side;
 import pokecube.core.PokecubeCore;
 import pokecube.core.events.MoveMessageEvent;
 import pokecube.core.events.pokemob.EvolveEvent;
@@ -26,11 +37,13 @@ import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.items.pokecubes.PokecubeManager;
+import pokecube.pokeplayer.network.DataSyncWrapper;
 import pokecube.pokeplayer.network.PacketTransform;
 
 public class EventsHandler
 {
-    private static Proxy proxy;
+    public static final ResourceLocation DATACAP = new ResourceLocation(PokecubeMod.ID, "data");
+    private static Proxy                 proxy;
 
     public EventsHandler(Proxy proxy)
     {
@@ -59,17 +72,17 @@ public class EventsHandler
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event)
     {
-    	IPokemob pokemob = proxy.getPokemob(event.player);
-    	if(pokemob != null) pokemob.getEntity().addedToChunk = true;
+        IPokemob pokemob = proxy.getPokemob(event.player);
+        if (pokemob != null) pokemob.getEntity().addedToChunk = true;
         if (event.phase == Phase.END)
         {
             if (event.player.getHealth() <= 0) { return; }
             event.player.addedToChunk = true;
-            //pokemob.getEntity().addedToChunk = true;
-            //if (pokemob != null) {
-            //	checkEvolution(pokemob);
-            //}
-            proxy.updateInfo(event.player);	
+            // pokemob.getEntity().addedToChunk = true;
+            // if (pokemob != null) {
+            // checkEvolution(pokemob);
+            // }
+            proxy.updateInfo(event.player);
         }
     }
 
@@ -83,6 +96,34 @@ public class EventsHandler
             if (pokemob != null)
             {
                 evt.moveInfo.attacked = pokemob.getEntity();
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onAttacked(LivingAttackEvent event)
+    {
+        if (event.getEntity() instanceof EntityPlayer)
+        {
+            IPokemob pokemob = proxy.getPokemob((EntityPlayer) event.getEntity());
+            if (pokemob != null)
+            {
+                pokemob.getEntity().attackEntityFrom(event.getSource(), event.getAmount());
+                event.setCanceled(true);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onDamaged(LivingDamageEvent event)
+    {
+        // System.out.println(event.getAmount());
+        if (event.getEntity() instanceof EntityPlayer)
+        {
+            IPokemob pokemob = proxy.getPokemob((EntityPlayer) event.getEntity());
+            if (pokemob != null)
+            {
+                System.out.println("D" + event.getAmount());
             }
         }
     }
@@ -103,8 +144,10 @@ public class EventsHandler
                 ItemStack stack = PokecubeManager.pokemobToItem(pokemob);
                 PokecubeManager.heal(stack);
                 pokemob = PokecubeManager.itemToPokemob(stack, event.player.getEntityWorld());
+                pokemob.getEntity().isDead = false;
+                pokemob.getEntity().deathTime = -1;
                 proxy.setPokemob(event.player, pokemob);
-                sendUpdate(event.player);
+                PacketTransform.sendPacket(event.player, (EntityPlayerMP) event.player);
             }
         }
     }
@@ -143,7 +186,7 @@ public class EventsHandler
                 PokecubeManager.heal(stack);
                 pokemob = PokecubeManager.itemToPokemob(stack, player.getEntityWorld());
                 proxy.setPokemob(player, pokemob);
-                sendUpdate(player);
+                PacketTransform.sendPacket(player, (EntityPlayerMP) player);
             }
         }
     }
@@ -161,9 +204,63 @@ public class EventsHandler
             evt.setCanceled(true);
             if (!player.getEntityWorld().isRemote)
             {
-                sendUpdate(player);
+                PacketTransform.sendPacket(player, (EntityPlayerMP) player);
             }
             return;
+        }
+    }
+
+    static HashSet<UUID>       syncSchedule = new HashSet<UUID>();
+
+    @SubscribeEvent
+    public void PlayerLoggedInEvent(PlayerLoggedInEvent event)
+    {
+        Side side = FMLCommonHandler.instance().getEffectiveSide();
+        if (side == Side.SERVER)
+        {
+            syncSchedule.add(event.player.getUniqueID());
+        }
+    }
+
+    @SubscribeEvent
+    public void PlayerLoggedOutEvent(PlayerLoggedOutEvent event)
+    {
+        syncSchedule.remove(event.player.getUniqueID());
+    }
+
+    @SubscribeEvent
+    public void startTracking(StartTracking event)
+    {
+        if (event.getTarget() instanceof EntityPlayer && event.getEntityPlayer().isServerWorld())
+        {
+            PacketTransform.sendPacket((EntityPlayer) event.getTarget(), (EntityPlayerMP) event.getEntityPlayer());
+        }
+    }
+
+    @SubscribeEvent
+    public void playerTick(LivingUpdateEvent event)
+    {
+        if (event.getEntityLiving().getEntityWorld().isRemote) return;
+        if (event.getEntity() instanceof EntityPlayerMP)
+        {
+            EntityPlayerMP player = (EntityPlayerMP) event.getEntity();
+            if (!syncSchedule.isEmpty() && syncSchedule.contains(player.getUniqueID()) && player.ticksExisted > 20)
+            {
+                for (EntityPlayer player2 : event.getEntity().getEntityWorld().playerEntities)
+                {
+                    PacketTransform.sendPacket(player, (EntityPlayerMP) player2);
+                }
+                syncSchedule.remove(player.getUniqueID());
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onEntityCapabilityAttach(AttachCapabilitiesEvent<Entity> event)
+    {
+        if (event.getObject() instanceof EntityPlayer)
+        {
+            event.addCapability(DATACAP, new DataSyncWrapper());
         }
     }
 
@@ -181,82 +278,15 @@ public class EventsHandler
                 evt.setCanceled(true);
                 if (!player.getEntityWorld().isRemote)
                 {
-                    sendUpdate(player);
+                    PacketTransform.sendPacket(player, (EntityPlayerMP) player);
                 }
                 return;
             }
-        }
-        if (!(evt.getEntity() instanceof EntityPlayer)) return;
-        EntityPlayer player = (EntityPlayer) evt.getEntity();
-        if (!player.getEntityWorld().isRemote)
-        {
-            sendUpdate(player);
-            sendExisting(player);
         }
     }
 
     public static void sendUpdate(EntityPlayer player)
     {
-        new SendPacket(player);
-    }
-
-    public static void sendExisting(EntityPlayer player)
-    {
-        new SendExsistingPacket(player);
-    }
-
-    public static class SendPacket
-    {
-        final EntityPlayer player;
-
-        public SendPacket(EntityPlayer player)
-        {
-            this.player = player;
-            MinecraftForge.EVENT_BUS.register(this);
-        }
-
-        @SubscribeEvent
-        public void onPlayerTick(TickEvent.PlayerTickEvent event)
-        {
-            if (event.player == player)
-            {
-                PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
-                PacketTransform message = new PacketTransform();
-                info.writeToNBT(message.data);
-                message.id = player.getEntityId();
-                PokecubeMod.packetPipeline.sendToAll(message);
-                MinecraftForge.EVENT_BUS.unregister(this);
-            }
-        }
-    }
-
-    public static class SendExsistingPacket
-    {
-        final EntityPlayer player;
-
-        public SendExsistingPacket(EntityPlayer player)
-        {
-            this.player = player;
-            MinecraftForge.EVENT_BUS.register(this);
-        }
-
-        @SubscribeEvent
-        public void onPlayerTick(TickEvent.PlayerTickEvent event)
-        {
-            if (event.player == player)
-            {
-                for (EntityPlayer player1 : player.getEntityWorld().playerEntities)
-                {
-                    if (player1 == player) continue;
-                    PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player1)
-                            .getData(PokeInfo.class);
-                    PacketTransform message = new PacketTransform();
-                    info.writeToNBT(message.data);
-                    message.id = player1.getEntityId();
-                    PokecubeMod.packetPipeline.sendTo(message, (EntityPlayerMP) player);
-                }
-                MinecraftForge.EVENT_BUS.unregister(this);
-            }
-        }
+        PacketTransform.sendPacket(player, (EntityPlayerMP) player);
     }
 }

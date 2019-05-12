@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ITickable;
@@ -21,6 +22,7 @@ import pokecube.core.utils.Tools;
 import pokecube.pokeplayer.EventsHandler;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.PokePlayer;
+import pokecube.pokeplayer.network.PacketTransform;
 import thut.lib.CompatWrapper;
 
 public class TileEntityTransformer extends TileEntityOwnable implements ITickable
@@ -70,6 +72,10 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
                 stepTick = 50;
             }
             EventsHandler.sendUpdate(player);
+            for (EntityPlayerMP player2 : player.getServer().getPlayerList().getPlayers())
+            {
+                if (player.dimension == player2.dimension) PacketTransform.sendPacket(player, player2);
+            }
             return;
         }
         else if (!CompatWrapper.isValid(stack) && !random && isPokemob)
@@ -90,6 +96,10 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             PokePlayer.PROXY.setPokemob(player, null);
             stack = pokemob;
             EventsHandler.sendUpdate(player);
+            for (EntityPlayerMP player2 : player.getServer().getPlayerList().getPlayers())
+            {
+                if (player.dimension == player2.dimension) PacketTransform.sendPacket(player, player2);
+            }
             return;
         }
         else if (random && isPokemob)
@@ -106,6 +116,10 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             PokePlayer.PROXY.setPokemob(player, null);
             stack = ItemStack.EMPTY;
             EventsHandler.sendUpdate(player);
+            for (EntityPlayerMP player2 : player.getServer().getPlayerList().getPlayers())
+            {
+                if (player.dimension == player2.dimension) PacketTransform.sendPacket(player, player2);
+            }
             return;
         }
     }

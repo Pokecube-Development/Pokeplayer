@@ -21,7 +21,6 @@ import pokecube.core.interfaces.IPokemob;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.Proxy;
 import pokecube.pokeplayer.client.gui.GuiAsPokemob;
-import pokecube.pokeplayer.client.gui.GuiPokemob;
 
 public class ProxyClient extends Proxy
 {
@@ -103,7 +102,6 @@ public class ProxyClient extends Proxy
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
     {
-        if (ID == POKEMOBGUI && getPokemob(player) != null) { return new GuiPokemob(player); }
         return null;
     }
 }

@@ -21,11 +21,20 @@ import net.minecraftforge.fml.relauncher.Side;
 import pokecube.core.PokecubeCore;
 import pokecube.core.PokecubeItems;
 import pokecube.core.interfaces.PokecubeMod;
+import pokecube.core.interfaces.pokemob.IHasCommands;
+import pokecube.core.interfaces.pokemob.IHasCommands.Command;
+import pokecube.core.interfaces.pokemob.commandhandlers.ChangeFormHandler;
+import pokecube.core.interfaces.pokemob.commandhandlers.MoveIndexHandler;
+import pokecube.core.interfaces.pokemob.commandhandlers.SwapMovesHandler;
+import pokecube.core.interfaces.pokemob.commandhandlers.TeleportHandler;
 import pokecube.core.network.EntityProvider;
 import pokecube.pokeplayer.block.BlockTransformer;
 import pokecube.pokeplayer.network.EntityProviderPokeplayer;
-import pokecube.pokeplayer.network.PacketDoActions;
 import pokecube.pokeplayer.network.PacketTransform;
+import pokecube.pokeplayer.network.handlers.AttackEntityHandler;
+import pokecube.pokeplayer.network.handlers.AttackLocationHandler;
+import pokecube.pokeplayer.network.handlers.AttackNothingHandler;
+import pokecube.pokeplayer.network.handlers.StanceHandler;
 import pokecube.pokeplayer.tileentity.TileEntityTransformer;
 import thut.core.common.handlers.PlayerDataHandler;
 
@@ -64,10 +73,6 @@ public class PokePlayer
         NetworkRegistry.INSTANCE.registerGuiHandler(this, PROXY);
         PlayerDataHandler.dataMap.add(PokeInfo.class);
         PROXY.init();
-        PokecubeMod.packetPipeline.registerMessage(PacketDoActions.class, PacketDoActions.class,
-                PokecubeCore.getMessageID(), Side.CLIENT);
-        PokecubeMod.packetPipeline.registerMessage(PacketDoActions.class, PacketDoActions.class,
-                PokecubeCore.getMessageID(), Side.SERVER);
         PokecubeMod.packetPipeline.registerMessage(PacketTransform.class, PacketTransform.class,
                 PokecubeCore.getMessageID(), Side.CLIENT);
     }
@@ -78,6 +83,15 @@ public class PokePlayer
         PROXY.postInit();
         PokecubeMod.core
                 .setEntityProvider(new EntityProviderPokeplayer((EntityProvider) PokecubeMod.core.getEntityProvider()));
+
+        IHasCommands.COMMANDHANDLERS.put(Command.ATTACKENTITY, AttackEntityHandler.class);
+        IHasCommands.COMMANDHANDLERS.put(Command.ATTACKLOCATION, AttackLocationHandler.class);
+        IHasCommands.COMMANDHANDLERS.put(Command.ATTACKNOTHING, AttackNothingHandler.class);
+        IHasCommands.COMMANDHANDLERS.put(Command.CHANGEFORM, ChangeFormHandler.class);
+        IHasCommands.COMMANDHANDLERS.put(Command.CHANGEMOVEINDEX, MoveIndexHandler.class);
+        IHasCommands.COMMANDHANDLERS.put(Command.STANCE, StanceHandler.class);
+        IHasCommands.COMMANDHANDLERS.put(Command.SWAPMOVES, SwapMovesHandler.class);
+        IHasCommands.COMMANDHANDLERS.put(Command.TELEPORT, TeleportHandler.class);
     }
 
     @SubscribeEvent

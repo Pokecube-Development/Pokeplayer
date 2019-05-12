@@ -17,13 +17,17 @@ import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.capabilities.AICapWrapper;
 import pokecube.core.interfaces.pokemob.ai.GeneralStates;
+import pokecube.core.interfaces.pokemob.ai.LogicStates;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import pokecube.core.utils.EntityTools;
 import pokecube.core.utils.PokeType;
 import pokecube.pokeplayer.inventory.InventoryPlayerPokemob;
+import pokecube.pokeplayer.network.DataSyncWrapper;
 import pokecube.pokeplayer.network.PacketTransform;
 import thut.api.entity.ai.IAIMob;
+import thut.api.world.mobs.data.DataSync;
 import thut.core.common.handlers.PlayerDataHandler.PlayerData;
+import thut.core.common.world.mobs.data.SyncHandler;
 import thut.lib.Accessor;
 
 public class PokeInfo extends PlayerData
@@ -67,6 +71,11 @@ public class PokeInfo extends PlayerData
 
     public void resetPlayer(EntityPlayer player)
     {
+        DataSync sync = SyncHandler.getData(player);
+        if (sync instanceof DataSyncWrapper)
+        {
+            ((DataSyncWrapper) sync).wrapped = sync;
+        }
         if (pokemob == null && !player.getEntityWorld().isRemote) return;
         player.eyeHeight = player.getDefaultEyeHeight();
         player.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(originalHP);
@@ -92,6 +101,12 @@ public class PokeInfo extends PlayerData
     public void setPlayer(EntityPlayer player)
     {
         if (pokemob == null) return;
+        DataSync sync = SyncHandler.getData(player);
+        DataSync sync2 = SyncHandler.getData(pokemob.getEntity());
+        if (sync instanceof DataSyncWrapper && sync2 != null)
+        {
+            ((DataSyncWrapper) sync).wrapped = sync2;
+        }
         pokemob.setSize((float) (pokemob.getSize() / PokecubeMod.core.getConfig().scalefactor));
         float height = pokemob.getSize() * pokemob.getPokedexEntry().height;
         float width = pokemob.getSize() * pokemob.getPokedexEntry().width;
@@ -128,8 +143,9 @@ public class PokeInfo extends PlayerData
             pokemob.setHungerTime(-PokecubeCore.core.getConfig().pokemobLifeSpan / 4);
         }
         float health = poke.getHealth();
+        poke.nextStepDistance = Integer.MAX_VALUE;
         EntityTools.copyEntityTransforms(poke, player);
-        if (player instanceof EntityPlayerMP)// && health != player.getHealth())
+        if (player instanceof EntityPlayerMP && player.addedToChunk)
         {
             PacketTransform packet = new PacketTransform();
             packet.id = player.getEntityId();
@@ -201,8 +217,10 @@ public class PokeInfo extends PlayerData
             Vec3d end = new Vec3d(player.posX, player.posY - h, player.posZ);
 
             RayTraceResult position = player.getEntityWorld().rayTraceBlocks(start, end, true, true, false);
+            boolean noFloat = pokemob.getLogicState(LogicStates.SITTING) || pokemob.getLogicState(LogicStates.SLEEPING)
+                    || pokemob.isGrounded() || (pokemob.getStatus() & (IPokemob.STATUS_SLP + IPokemob.STATUS_FRZ)) > 0;
 
-            if (position != null)
+            if (position != null && !noFloat)
             {
                 double d = position.hitVec.subtract(start).lengthVector();
                 if (d < 0.9 * h) player.motionY += 0.1;
