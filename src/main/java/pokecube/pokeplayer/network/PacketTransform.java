@@ -13,11 +13,11 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import pokecube.core.PokecubeCore;
-import pokecube.core.handlers.PokecubePlayerDataHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.pokemob.ai.LogicStates;
 import pokecube.pokeplayer.PokeInfo;
+import thut.core.common.handlers.PlayerDataHandler;
 
 public class PacketTransform implements IMessage, IMessageHandler<PacketTransform, IMessage>
 {
@@ -31,7 +31,7 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
 
     public static PacketTransform getPacket(EntityPlayer toSend)
     {
-        PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(toSend).getData(PokeInfo.class);
+        PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(toSend).getData(PokeInfo.class);
         PacketTransform message = new PacketTransform();
         info.writeToNBT(message.data);
         message.id = toSend.getEntityId();
@@ -86,7 +86,7 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
             EntityPlayer player = PokecubeCore.proxy.getPlayer((String) null);
             if (message.data.hasKey("H"))
             {
-                PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+                PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                 IPokemob pokemob = info.getPokemob(world);
                 if (pokemob == null) { return; }
                 float health = message.data.getFloat("H");
@@ -96,7 +96,7 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
             }
             else if (message.data.hasKey("S"))
             {
-                PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+                PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                 IPokemob pokemob = info.getPokemob(world);
                 if (pokemob == null) { return; }
                 pokemob.setLogicState(LogicStates.SITTING, message.data.getBoolean("S"));
@@ -106,7 +106,7 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
         if (e instanceof EntityPlayer)
         {
             EntityPlayer player = (EntityPlayer) e;
-            PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+            PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
             info.clear();
             info.readFromNBT(message.data);
             IPokemob pokemob = info.getPokemob(world);

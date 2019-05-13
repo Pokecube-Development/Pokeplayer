@@ -13,7 +13,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ITickable;
 import pokecube.core.blocks.TileEntityOwnable;
 import pokecube.core.database.Database;
-import pokecube.core.handlers.PokecubePlayerDataHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
@@ -23,6 +22,7 @@ import pokecube.pokeplayer.EventsHandler;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.PokePlayer;
 import pokecube.pokeplayer.network.PacketTransform;
+import thut.core.common.handlers.PlayerDataHandler;
 import thut.lib.CompatWrapper;
 
 public class TileEntityTransformer extends TileEntityOwnable implements ITickable
@@ -60,7 +60,7 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
     public void onStepped(EntityPlayer player)
     {
         if (getWorld().isRemote || stepTick > 0) return;
-        PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         boolean isPokemob = info.getPokemob(getWorld()) != null;
         if ((CompatWrapper.isValid(stack) || random) && !isPokemob)
         {

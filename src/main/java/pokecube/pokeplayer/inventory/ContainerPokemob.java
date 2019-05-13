@@ -9,10 +9,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import pokecube.core.PokecubeItems;
-import pokecube.core.handlers.PokecubePlayerDataHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.PokePlayer;
+import thut.core.common.handlers.PlayerDataHandler;
 import thut.lib.CompatWrapper;
 
 public class ContainerPokemob extends Container
@@ -22,7 +22,7 @@ public class ContainerPokemob extends Container
 	{
 	    final IPokemob e = PokePlayer.PROXY.getPokemob(player);
 	    final IInventory pokeInv;
-        PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         pokeInv = info.pokeInventory;
 	    IInventory playerInv = player.inventory;
 		this.pokemobInv = pokeInv;

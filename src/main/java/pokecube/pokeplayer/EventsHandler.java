@@ -32,13 +32,13 @@ import pokecube.core.events.MoveMessageEvent;
 import pokecube.core.events.pokemob.EvolveEvent;
 import pokecube.core.events.pokemob.RecallEvent;
 import pokecube.core.events.pokemob.combat.AttackEvent;
-import pokecube.core.handlers.PokecubePlayerDataHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import pokecube.pokeplayer.network.DataSyncWrapper;
 import pokecube.pokeplayer.network.PacketTransform;
+import thut.core.common.handlers.PlayerDataHandler;
 
 public class EventsHandler
 {
@@ -49,7 +49,7 @@ public class EventsHandler
     {
         EventsHandler.proxy = proxy;
         MinecraftForge.EVENT_BUS.register(this);
-        PokecubeCore.MOVE_BUS.register(this);
+        PokecubeMod.MOVE_BUS.register(this);
     }
 
     @SubscribeEvent
@@ -62,7 +62,7 @@ public class EventsHandler
             EntityInteractSpecific evt = new EntityInteractSpecific(event.getEntityPlayer(), event.getHand(),
                     pokemob.getEntity(), new Vec3d(0, 0, 0));
             PokecubeCore.instance.events.interactEvent(evt);
-            PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(event.getEntityPlayer())
+            PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(event.getEntityPlayer())
                     .getData(PokeInfo.class);
             info.save(event.getEntityPlayer());
             if (evt.isCanceled()) event.setCanceled(true);

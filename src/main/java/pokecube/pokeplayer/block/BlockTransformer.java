@@ -29,6 +29,7 @@ public class BlockTransformer extends BlockPressurePlate implements ITileEntityP
     }
 
     // 1.11
+    @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
             EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
     {

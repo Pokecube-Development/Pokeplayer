@@ -16,11 +16,11 @@ import net.minecraftforge.fml.relauncher.Side;
 import pokecube.core.PokecubeCore;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.client.gui.GuiPokedex;
-import pokecube.core.handlers.PokecubePlayerDataHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.Proxy;
 import pokecube.pokeplayer.client.gui.GuiAsPokemob;
+import thut.core.common.handlers.PlayerDataHandler;
 
 public class ProxyClient extends Proxy
 {
@@ -30,7 +30,7 @@ public class ProxyClient extends Proxy
         IPokemob ret = super.getPokemob(player);
         if (ret != null && player.getEntityWorld().isRemote)
         {
-            PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+            PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
             info.setPlayer(player);
         }
         return ret;

@@ -7,7 +7,6 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-import pokecube.core.PokecubeCore;
 import pokecube.core.events.pokemob.combat.CommandAttackEvent;
 import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
@@ -51,8 +50,8 @@ public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.comman
                 // Checks if within range
                 float dist = target.getDistance(pokemob.getEntity());
                 double range = (move.getAttackCategory() & IMoveConstants.CATEGORY_DISTANCE) > 0
-                        ? PokecubeCore.core.getConfig().rangedAttackDistance
-                        : PokecubeCore.core.getConfig().contactAttackDistance;
+                        ? PokecubeMod.core.getConfig().rangedAttackDistance
+                        : PokecubeMod.core.getConfig().contactAttackDistance;
                 range = Math.max(pokemob.getMobSizes().x, range);
                 range = Math.max(1, range);
                 if (dist < range)

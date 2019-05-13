@@ -47,6 +47,7 @@ public class DataSyncWrapper extends DataSync_Impl
     @Override
     public void update(List<Data<?>> values)
     {
+        if (wrapped == this) return;
         wrapped.update(values);
     }
 

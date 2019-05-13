@@ -11,8 +11,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import pokecube.core.PokecubeCore;
-import pokecube.core.handlers.PokecubePlayerDataHandler;
+import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.capabilities.AICapWrapper;
@@ -26,6 +25,7 @@ import pokecube.pokeplayer.network.DataSyncWrapper;
 import pokecube.pokeplayer.network.PacketTransform;
 import thut.api.entity.ai.IAIMob;
 import thut.api.world.mobs.data.DataSync;
+import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.handlers.PlayerDataHandler.PlayerData;
 import thut.core.common.world.mobs.data.SyncHandler;
 import thut.lib.Accessor;
@@ -140,7 +140,7 @@ public class PokeInfo extends PlayerData
         if (player.capabilities.isCreativeMode)
         {
             poke.setHealth(poke.getMaxHealth());
-            pokemob.setHungerTime(-PokecubeCore.core.getConfig().pokemobLifeSpan / 4);
+            pokemob.setHungerTime(-PokecubeMod.core.getConfig().pokemobLifeSpan / 4);
         }
         float health = poke.getHealth();
         poke.nextStepDistance = Integer.MAX_VALUE;
@@ -183,7 +183,7 @@ public class PokeInfo extends PlayerData
     public void save(EntityPlayer player)
     {
         if (!player.getEntityWorld().isRemote)
-            PokecubePlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), getIdentifier());
+            PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), getIdentifier());
     }
 
     private void setFlying(EntityPlayer player, boolean set)
@@ -218,7 +218,7 @@ public class PokeInfo extends PlayerData
 
             RayTraceResult position = player.getEntityWorld().rayTraceBlocks(start, end, true, true, false);
             boolean noFloat = pokemob.getLogicState(LogicStates.SITTING) || pokemob.getLogicState(LogicStates.SLEEPING)
-                    || pokemob.isGrounded() || (pokemob.getStatus() & (IPokemob.STATUS_SLP + IPokemob.STATUS_FRZ)) > 0;
+                    || pokemob.isGrounded() || (pokemob.getStatus() & (IMoveConstants.STATUS_SLP + IMoveConstants.STATUS_FRZ)) > 0;
 
             if (position != null && !noFloat)
             {

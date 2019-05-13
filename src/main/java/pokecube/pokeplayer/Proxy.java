@@ -4,9 +4,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.IGuiHandler;
-import pokecube.core.handlers.PokecubePlayerDataHandler;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.utils.EntityTools;
+import thut.core.common.handlers.PlayerDataHandler;
 
 public class Proxy implements IGuiHandler
 {
@@ -17,13 +17,13 @@ public class Proxy implements IGuiHandler
 
     public void savePokemob(EntityPlayer player)
     {
-        PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         if (info != null) info.save(player);
     }
 
     private void setMapping(EntityPlayer player, IPokemob pokemob)
     {
-        PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         info.set(pokemob, player);
         if (pokemob != null)
         {
@@ -36,13 +36,13 @@ public class Proxy implements IGuiHandler
     public IPokemob getPokemob(EntityPlayer player)
     {
         if (player == null || player.getUniqueID() == null) return null;
-        PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         return info.getPokemob(player.getEntityWorld());
     }
 
     public void updateInfo(EntityPlayer player)
     {
-        PokeInfo info = PokecubePlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         info.onUpdate(player);
     }
 
