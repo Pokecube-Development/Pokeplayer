@@ -11,6 +11,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ITickable;
+import net.minecraft.world.WorldServer;
 import pokecube.core.blocks.TileEntityOwnable;
 import pokecube.core.database.Database;
 import pokecube.core.interfaces.IPokemob;
@@ -72,9 +73,10 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
                 stepTick = 50;
             }
             EventsHandler.sendUpdate(player);
-            for (EntityPlayerMP player2 : player.getServer().getPlayerList().getPlayers())
+            WorldServer world = (WorldServer) player.getEntityWorld();
+            for (EntityPlayer player2 : world.getEntityTracker().getTrackingPlayers(player))
             {
-                if (player.dimension == player2.dimension) PacketTransform.sendPacket(player, player2);
+                PacketTransform.sendPacket(player, (EntityPlayerMP) player2);
             }
             return;
         }
@@ -96,9 +98,10 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             PokePlayer.PROXY.setPokemob(player, null);
             stack = pokemob;
             EventsHandler.sendUpdate(player);
-            for (EntityPlayerMP player2 : player.getServer().getPlayerList().getPlayers())
+            WorldServer world = (WorldServer) player.getEntityWorld();
+            for (EntityPlayer player2 : world.getEntityTracker().getTrackingPlayers(player))
             {
-                if (player.dimension == player2.dimension) PacketTransform.sendPacket(player, player2);
+                PacketTransform.sendPacket(player, (EntityPlayerMP) player2);
             }
             return;
         }
@@ -116,9 +119,10 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             PokePlayer.PROXY.setPokemob(player, null);
             stack = ItemStack.EMPTY;
             EventsHandler.sendUpdate(player);
-            for (EntityPlayerMP player2 : player.getServer().getPlayerList().getPlayers())
+            WorldServer world = (WorldServer) player.getEntityWorld();
+            for (EntityPlayer player2 : world.getEntityTracker().getTrackingPlayers(player))
             {
-                if (player.dimension == player2.dimension) PacketTransform.sendPacket(player, player2);
+                PacketTransform.sendPacket(player, (EntityPlayerMP) player2);
             }
             return;
         }

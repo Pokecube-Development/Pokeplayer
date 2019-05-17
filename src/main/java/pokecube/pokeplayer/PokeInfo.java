@@ -66,6 +66,12 @@ public class PokeInfo extends PlayerData
         {
             ((AICapWrapper) ai).init();
         }
+        DataSync sync = SyncHandler.getData(player);
+        if (sync instanceof DataSyncWrapper)
+        {
+            // TODO see if this is working.
+            ((DataSyncWrapper) sync).wrapped = pokemob.dataSync();
+        }
         save(player);
     }
 
@@ -74,6 +80,7 @@ public class PokeInfo extends PlayerData
         DataSync sync = SyncHandler.getData(player);
         if (sync instanceof DataSyncWrapper)
         {
+            // TODO see if this is working.
             ((DataSyncWrapper) sync).wrapped = sync;
         }
         if (pokemob == null && !player.getEntityWorld().isRemote) return;
@@ -102,10 +109,10 @@ public class PokeInfo extends PlayerData
     {
         if (pokemob == null) return;
         DataSync sync = SyncHandler.getData(player);
-        DataSync sync2 = SyncHandler.getData(pokemob.getEntity());
-        if (sync instanceof DataSyncWrapper && sync2 != null)
+        if (sync instanceof DataSyncWrapper)
         {
-            ((DataSyncWrapper) sync).wrapped = sync2;
+            // TODO see if this is working.
+            ((DataSyncWrapper) sync).wrapped = pokemob.dataSync();
         }
         pokemob.setSize((float) (pokemob.getSize() / PokecubeMod.core.getConfig().scalefactor));
         float height = pokemob.getSize() * pokemob.getPokedexEntry().height;
@@ -204,6 +211,7 @@ public class PokeInfo extends PlayerData
         if (pokemob.floats() || pokemob.flys())
         {
             player.fallDistance = 0;
+            if (player instanceof EntityPlayerMP) ((EntityPlayerMP) player).connection.floatingTickCount = 0;
         }
     }
 
@@ -218,7 +226,8 @@ public class PokeInfo extends PlayerData
 
             RayTraceResult position = player.getEntityWorld().rayTraceBlocks(start, end, true, true, false);
             boolean noFloat = pokemob.getLogicState(LogicStates.SITTING) || pokemob.getLogicState(LogicStates.SLEEPING)
-                    || pokemob.isGrounded() || (pokemob.getStatus() & (IMoveConstants.STATUS_SLP + IMoveConstants.STATUS_FRZ)) > 0;
+                    || pokemob.isGrounded()
+                    || (pokemob.getStatus() & (IMoveConstants.STATUS_SLP + IMoveConstants.STATUS_FRZ)) > 0;
 
             if (position != null && !noFloat)
             {

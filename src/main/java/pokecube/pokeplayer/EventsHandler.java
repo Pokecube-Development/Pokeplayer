@@ -210,7 +210,7 @@ public class EventsHandler
         }
     }
 
-    static HashSet<UUID>       syncSchedule = new HashSet<UUID>();
+    static HashSet<UUID> syncSchedule = new HashSet<UUID>();
 
     @SubscribeEvent
     public void PlayerLoggedInEvent(PlayerLoggedInEvent event)
@@ -244,11 +244,17 @@ public class EventsHandler
         if (event.getEntity() instanceof EntityPlayerMP)
         {
             EntityPlayerMP player = (EntityPlayerMP) event.getEntity();
-            if (!syncSchedule.isEmpty() && syncSchedule.contains(player.getUniqueID()) && player.ticksExisted > 20)
+            if (!syncSchedule.isEmpty() && syncSchedule.contains(player.getUniqueID()) && player.ticksExisted > 5)
             {
-                for (EntityPlayer player2 : event.getEntity().getEntityWorld().playerEntities)
+                IPokemob pokemob = proxy.getPokemob(player);
+                if (pokemob != null)
                 {
-                    PacketTransform.sendPacket(player, (EntityPlayerMP) player2);
+                    PokePlayer.PROXY.setPokemob(player, pokemob);
+                    EventsHandler.sendUpdate(player);
+                    for (EntityPlayer player2 : event.getEntity().getEntityWorld().playerEntities)
+                    {
+                        PacketTransform.sendPacket(player, (EntityPlayerMP) player2);
+                    }
                 }
                 syncSchedule.remove(player.getUniqueID());
             }

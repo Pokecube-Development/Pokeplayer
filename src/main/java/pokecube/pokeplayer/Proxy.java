@@ -1,10 +1,13 @@
 package pokecube.pokeplayer;
 
+import java.util.logging.Level;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import pokecube.core.interfaces.IPokemob;
+import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.utils.EntityTools;
 import thut.core.common.handlers.PlayerDataHandler;
 
@@ -43,7 +46,14 @@ public class Proxy implements IGuiHandler
     public void updateInfo(EntityPlayer player)
     {
         PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
-        info.onUpdate(player);
+        try
+        {
+            info.onUpdate(player);
+        }
+        catch (Exception e)
+        {
+            PokecubeMod.log(Level.SEVERE, "Error ticking Pokeplayer", e);
+        }
     }
 
     public void init()

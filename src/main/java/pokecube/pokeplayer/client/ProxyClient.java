@@ -1,6 +1,7 @@
 package pokecube.pokeplayer.client;
 
 import java.util.UUID;
+import java.util.logging.Level;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -17,6 +18,7 @@ import pokecube.core.PokecubeCore;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.client.gui.GuiPokedex;
 import pokecube.core.interfaces.IPokemob;
+import pokecube.core.interfaces.PokecubeMod;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.Proxy;
 import pokecube.pokeplayer.client.gui.GuiAsPokemob;
@@ -71,8 +73,15 @@ public class ProxyClient extends Proxy
         event.setCanceled(true);
         boolean shadow = Minecraft.getMinecraft().getRenderManager().isRenderShadow();
         Minecraft.getMinecraft().getRenderManager().setRenderShadow(false);
-        Minecraft.getMinecraft().getRenderManager().renderEntity(pokemob.getEntity(), event.getX(), event.getY(),
-                event.getZ(), event.getEntityPlayer().rotationYaw, event.getPartialRenderTick(), false);
+        try
+        {
+            Minecraft.getMinecraft().getRenderManager().renderEntity(pokemob.getEntity(), event.getX(), event.getY(),
+                    event.getZ(), event.getEntityPlayer().rotationYaw, event.getPartialRenderTick(), false);
+        }
+        catch (Exception e)
+        {
+            PokecubeMod.log(Level.SEVERE, "Error Rendering Pokeplayer", e);
+        }
         Minecraft.getMinecraft().getRenderManager().setRenderShadow(shadow);
     }
 
