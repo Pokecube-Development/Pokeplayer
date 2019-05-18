@@ -6,11 +6,14 @@ import java.util.logging.Level;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -19,6 +22,9 @@ import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.client.gui.GuiPokedex;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
+import pokecube.core.interfaces.pokemob.IHasCommands.Command;
+import pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler;
+import pokecube.core.network.pokemobs.PacketCommand;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.Proxy;
 import pokecube.pokeplayer.client.gui.GuiAsPokemob;
@@ -96,13 +102,26 @@ public class ProxyClient extends Proxy
     @SubscribeEvent
     public void mouseClickEvent(MouseEvent event)
     {
-        IPokemob pokemob = getPokemob(PokecubeCore.proxy.getPlayer((UUID) null));
-        if (pokemob != null && event.getButton() == 0 && event.isButtonstate())
+        IPokemob pokemob = null;
+        EntityPlayer player = null;
+        int button = event.getButton();
+        if (GuiScreen.isAltKeyDown() && button >= 0
+                && (pokemob = getPokemob(player = PokecubeCore.proxy.getPlayer((UUID) null))) != null)
         {
-            if (GuiScreen.isAltKeyDown())
+            if (event.getButton() == 0 && event.isButtonstate())
             {
                 GuiAsPokemob.useMove = true;
                 GuiDisplayPokecubeInfo.instance().pokemobAttack();
+                event.setCanceled(true);
+            }
+            if (event.getButton() == 1 && event.isButtonstate())
+            {
+                // Our custom StanceHandler will do interaction code on -2
+                PacketCommand.sendCommand(pokemob, Command.STANCE, new StanceHandler(true, (byte) -2));
+
+                EntityInteractSpecific evt = new EntityInteractSpecific(player, EnumHand.MAIN_HAND, pokemob.getEntity(),
+                        new Vec3d(0, 0, 0));
+                PokecubeCore.instance.events.interactEvent(evt);
                 event.setCanceled(true);
             }
         }

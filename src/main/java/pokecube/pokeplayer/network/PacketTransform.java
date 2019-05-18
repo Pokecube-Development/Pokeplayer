@@ -15,7 +15,10 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import pokecube.core.PokecubeCore;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
+import pokecube.core.interfaces.pokemob.IHasCommands.Command;
 import pokecube.core.interfaces.pokemob.ai.LogicStates;
+import pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler;
+import pokecube.core.network.pokemobs.PacketCommand;
 import pokecube.pokeplayer.PokeInfo;
 import thut.core.common.handlers.PlayerDataHandler;
 
@@ -113,6 +116,9 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
             if (pokemob != null)
             {
                 info.set(pokemob, player);
+                // Callback to let server know to update us.
+                pokemob.getEntity().setEntityId(player.getEntityId());
+                PacketCommand.sendCommand(pokemob, Command.STANCE, new StanceHandler(true, (byte) -3));
             }
             else
             {

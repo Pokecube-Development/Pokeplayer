@@ -8,7 +8,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -18,7 +17,6 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
@@ -27,8 +25,6 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
-import pokecube.core.PokecubeCore;
-import pokecube.core.events.MoveMessageEvent;
 import pokecube.core.events.pokemob.EvolveEvent;
 import pokecube.core.events.pokemob.RecallEvent;
 import pokecube.core.events.pokemob.combat.AttackEvent;
@@ -38,7 +34,6 @@ import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import pokecube.pokeplayer.network.DataSyncWrapper;
 import pokecube.pokeplayer.network.PacketTransform;
-import thut.core.common.handlers.PlayerDataHandler;
 
 public class EventsHandler
 {
@@ -55,18 +50,6 @@ public class EventsHandler
     @SubscribeEvent
     public void interactEvent(PlayerInteractEvent.RightClickItem event)
     {
-        IPokemob pokemob = proxy.getPokemob(event.getEntityPlayer());
-        if (pokemob == null) return;
-        if (event.getEntityPlayer().isSneaking())
-        {
-            EntityInteractSpecific evt = new EntityInteractSpecific(event.getEntityPlayer(), event.getHand(),
-                    pokemob.getEntity(), new Vec3d(0, 0, 0));
-            PokecubeCore.instance.events.interactEvent(evt);
-            PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(event.getEntityPlayer())
-                    .getData(PokeInfo.class);
-            info.save(event.getEntityPlayer());
-            if (evt.isCanceled()) event.setCanceled(true);
-        }
     }
 
     @SubscribeEvent
@@ -78,10 +61,6 @@ public class EventsHandler
         {
             if (event.player.getHealth() <= 0) { return; }
             event.player.addedToChunk = true;
-            // pokemob.getEntity().addedToChunk = true;
-            // if (pokemob != null) {
-            // checkEvolution(pokemob);
-            // }
             proxy.updateInfo(event.player);
         }
     }
@@ -117,7 +96,6 @@ public class EventsHandler
     @SubscribeEvent
     public void onDamaged(LivingDamageEvent event)
     {
-        // System.out.println(event.getAmount());
         if (event.getEntity() instanceof EntityPlayer)
         {
             IPokemob pokemob = proxy.getPokemob((EntityPlayer) event.getEntity());
@@ -126,11 +104,6 @@ public class EventsHandler
                 System.out.println("D" + event.getAmount());
             }
         }
-    }
-
-    @SubscribeEvent
-    public void pokemobMoveMessage(MoveMessageEvent evt)
-    {
     }
 
     @SubscribeEvent
@@ -244,7 +217,7 @@ public class EventsHandler
         if (event.getEntity() instanceof EntityPlayerMP)
         {
             EntityPlayerMP player = (EntityPlayerMP) event.getEntity();
-            if (!syncSchedule.isEmpty() && syncSchedule.contains(player.getUniqueID()) && player.ticksExisted > 5)
+            if (!syncSchedule.isEmpty() && syncSchedule.contains(player.getUniqueID()) && player.ticksExisted > 20)
             {
                 IPokemob pokemob = proxy.getPokemob(player);
                 if (pokemob != null)

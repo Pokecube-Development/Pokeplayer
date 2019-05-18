@@ -4,11 +4,18 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
+import pokecube.core.PokecubeCore;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.pokemob.ai.LogicStates;
 import pokecube.core.network.pokemobs.PacketCommand.DefaultHandler;
+import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.network.PacketTransform;
+import thut.core.common.handlers.PlayerDataHandler;
+import thut.core.common.world.mobs.data.PacketDataSync;
 
 public class StanceHandler extends DefaultHandler
 {
@@ -38,11 +45,26 @@ public class StanceHandler extends DefaultHandler
             if (entity instanceof EntityPlayer)
             {
                 EntityPlayer player = (EntityPlayer) entity;
-                PacketTransform packet = new PacketTransform();
-                packet.id = player.getEntityId();
-                packet.data.setBoolean("U", true);
-                packet.data.setBoolean("S", pokemob.getLogicState(LogicStates.SITTING));
-                PokecubeMod.packetPipeline.sendTo(packet, (EntityPlayerMP) player);
+                if (key == -2)
+                {
+                    EntityInteractSpecific evt = new EntityInteractSpecific(player, EnumHand.MAIN_HAND,
+                            pokemob.getEntity(), new Vec3d(0, 0, 0));
+                    PokecubeCore.instance.events.interactEvent(evt);
+                    PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+                    info.save(player);
+                }
+                else if (key == -3)
+                {
+                    PacketDataSync.sync((EntityPlayerMP) player, pokemob.dataSync(), player.getEntityId(), true);
+                }
+                else
+                {
+                    PacketTransform packet = new PacketTransform();
+                    packet.id = player.getEntityId();
+                    packet.data.setBoolean("U", true);
+                    packet.data.setBoolean("S", pokemob.getLogicState(LogicStates.SITTING));
+                    PokecubeMod.packetPipeline.sendTo(packet, (EntityPlayerMP) player);
+                }
             }
         }
     }
