@@ -1,6 +1,7 @@
 package pokecube.pokeplayer.network.handlers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
@@ -58,6 +59,9 @@ public class AttackLocationHandler extends DefaultHandler
         else
         {
             pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler defaults = new pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler();
+            ByteBuf buffer = Unpooled.buffer();
+            this.writeToBuf(buffer);
+            defaults.readFromBuf(buffer);
             defaults.handleCommand(pokemob);
         }
     }
