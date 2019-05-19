@@ -1,7 +1,9 @@
 package pokecube.pokeplayer;
 
+import java.util.function.Predicate;
+
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -11,6 +13,9 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import pokecube.core.ai.thread.aiRunnables.combat.AIFindTarget;
+import pokecube.core.ai.thread.aiRunnables.idle.AIHungry;
+import pokecube.core.ai.thread.aiRunnables.idle.AIMate;
 import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
@@ -24,6 +29,8 @@ import pokecube.pokeplayer.inventory.InventoryPlayerPokemob;
 import pokecube.pokeplayer.network.DataSyncWrapper;
 import pokecube.pokeplayer.network.PacketTransform;
 import thut.api.entity.ai.IAIMob;
+import thut.api.entity.ai.IAIRunnable;
+import thut.api.world.mobs.data.Data;
 import thut.api.world.mobs.data.DataSync;
 import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.handlers.PlayerDataHandler.PlayerData;
@@ -115,6 +122,18 @@ public class PokeInfo extends PlayerData
             ((DataSyncWrapper) sync).wrapped = pokemob.dataSync();
         }
         pokemob.setSize((float) (pokemob.getSize() / PokecubeMod.core.getConfig().scalefactor));
+
+        pokemob.getAI().aiTasks.removeIf(new Predicate<IAIRunnable>()
+        {
+            @Override
+            public boolean test(IAIRunnable t)
+            {
+                boolean allowed = t instanceof AIHungry;
+                allowed = allowed || t instanceof AIMate;
+                return !allowed;
+            }
+        });
+
         float height = pokemob.getSize() * pokemob.getPokedexEntry().height;
         float width = pokemob.getSize() * pokemob.getPokedexEntry().width;
         player.eyeHeight = pokemob.getEntity().getEyeHeight();
@@ -139,16 +158,40 @@ public class PokeInfo extends PlayerData
             resetPlayer(player);
         }
         if (pokemob == null) return;
-        EntityLivingBase poke = pokemob.getEntity();
+        EntityLiving poke = pokemob.getEntity();
+        // Ensure the mob has correct world.
         poke.setWorld(player.getEntityWorld());
+
+        // Fixes pokemob sometimes targetting self.
+        if (poke.getAttackTarget() == player || poke.getAttackTarget() == poke)
+        {
+            boolean old = AIFindTarget.handleDamagedTargets;
+            AIFindTarget.handleDamagedTargets = false;
+            poke.setAttackTarget(null);
+            pokemob.setTargetID(-1);
+            AIFindTarget.handleDamagedTargets = old;
+        }
+
+        // Flag the data sync dirty every so often to ensure things stay synced.
+        if (poke.ticksExisted % 20 == 0)
+        {
+            for (Data<?> d : pokemob.dataSync().getAll())
+                d.setDirty(true);
+        }
+
+        // Ensure it is tamed.
         if (!pokemob.getGeneralState(GeneralStates.TAMED)) pokemob.setGeneralState(GeneralStates.TAMED, true);
+        // Update the mob.
         poke.onUpdate();
-        player.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(poke.getMaxHealth());
+
+        // Deal with health
         if (player.capabilities.isCreativeMode)
         {
             poke.setHealth(poke.getMaxHealth());
             pokemob.setHungerTime(-PokecubeMod.core.getConfig().pokemobLifeSpan / 4);
         }
+        else player.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(poke.getMaxHealth());
+
         float health = poke.getHealth();
         poke.nextStepDistance = Integer.MAX_VALUE;
         EntityTools.copyEntityTransforms(poke, player);

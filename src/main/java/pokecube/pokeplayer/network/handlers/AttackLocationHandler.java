@@ -58,6 +58,7 @@ public class AttackLocationHandler extends DefaultHandler
         }
         else
         {
+            // Do default behaviour.
             pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler defaults = new pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler();
             ByteBuf buffer = Unpooled.buffer();
             this.writeToBuf(buffer);

@@ -21,6 +21,14 @@ public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.comman
     @Override
     public void handleCommand(IPokemob pokemob)
     {
+        // Use default handling, which just agros stuff.
+        if (!pokemob.getEntity().getEntityData().getBoolean("isPlayer"))
+        {
+            super.handleCommand(pokemob);
+            return;
+        }
+
+        // Actually execute the move if needed.
         World world = pokemob.getEntity().getEntityWorld();
         Entity target = PokecubeMod.core.getEntityProvider().getEntity(world, targetId, true);
         if (target == null || !(target instanceof EntityLivingBase))
@@ -35,8 +43,9 @@ public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.comman
             return;
         }
         int currentMove = pokemob.getMoveIndex();
-        MinecraftForge.EVENT_BUS.post(new CommandAttackEvent(pokemob.getEntity(), target));
-        if (currentMove != 5 && MovesUtils.canUseMove(pokemob))
+        CommandAttackEvent event = new CommandAttackEvent(pokemob.getEntity(), target);
+        MinecraftForge.EVENT_BUS.post(event);
+        if (!event.isCanceled() && currentMove != 5 && MovesUtils.canUseMove(pokemob))
         {
             Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
             if (move.isSelfMove())

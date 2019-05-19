@@ -23,8 +23,9 @@ import thut.api.maths.Vector3;
 
 public class GuiAsPokemob extends GuiDisplayPokecubeInfo
 {
-    public static int     moveIndex = 0;
-    public static boolean useMove   = false;
+    /** Set when left clicked when holding alt, this sets the move to be
+     * used. */
+    public static boolean useMove = false;
 
     public GuiAsPokemob()
     {
@@ -43,8 +44,8 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
     public IPokemob getCurrentPokemob()
     {
         IPokemob pokemob = PokePlayer.PROXY.getPokemob(PokecubeCore.proxy.getPlayer((UUID) null));
-        if (pokemob == null) return super.getCurrentPokemob();
-        return pokemob;
+        if (pokemob != null) return pokemob;
+        return super.getCurrentPokemob();
     }
 
     @Override
@@ -100,28 +101,6 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
     public void pokemobBack()
     {
         if (!isPokemob()) super.pokemobBack();
-        else
-        {
-
-        }
-    }
-
-    @Override
-    public void nextMove(int i)
-    {
-        super.nextMove(i);
-    }
-
-    @Override
-    public void previousMove(int j)
-    {
-        super.previousMove(j);
-    }
-
-    @Override
-    public void setMove(int num)
-    {
-        super.setMove(num);
     }
 
     boolean isPokemob()
