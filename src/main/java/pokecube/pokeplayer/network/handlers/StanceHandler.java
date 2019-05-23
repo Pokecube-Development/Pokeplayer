@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
@@ -19,9 +20,12 @@ import thut.core.common.world.mobs.data.PacketDataSync;
 
 public class StanceHandler extends DefaultHandler
 {
+    public static final byte BUTTONTOGGLESIT = 2;
+    public static final byte SELFINTERACT    = -2;
+    public static final byte SYNCUPDATE      = -3;
 
-    boolean state;
-    byte    key;
+    boolean                  state;
+    byte                     key;
 
     public StanceHandler()
     {
@@ -36,28 +40,38 @@ public class StanceHandler extends DefaultHandler
     @Override
     public void handleCommand(IPokemob pokemob) throws Exception
     {
+        // Start by handling the default stance messages.
         pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler defaults = new pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler(
                 this.state, this.key);
         defaults.handleCommand(pokemob);
+
+        // Handle pokeplayer specific things.
         if (pokemob.getEntity().getEntityData().getBoolean("isPlayer"))
         {
             Entity entity = pokemob.getEntity().getEntityWorld().getEntityByID(pokemob.getEntity().getEntityId());
             if (entity instanceof EntityPlayer)
             {
                 EntityPlayer player = (EntityPlayer) entity;
-                if (key == -2)
+
+                if (key == SELFINTERACT)
                 {
                     EntityInteractSpecific evt = new EntityInteractSpecific(player, EnumHand.MAIN_HAND,
                             pokemob.getEntity(), new Vec3d(0, 0, 0));
+
+                    // Apply interaction, also do not allow saddle.
+                    ItemStack saddle = pokemob.getPokemobInventory().getStackInSlot(0);
+                    if (!saddle.isEmpty()) pokemob.getPokemobInventory().setInventorySlotContents(0, ItemStack.EMPTY);
                     PokecubeCore.instance.events.interactEvent(evt);
+                    if (!saddle.isEmpty()) pokemob.getPokemobInventory().setInventorySlotContents(0, saddle);
+
                     PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                     info.save(player);
                 }
-                else if (key == -3)
+                else if (key == SYNCUPDATE)
                 {
                     PacketDataSync.sync((EntityPlayerMP) player, pokemob.dataSync(), player.getEntityId(), true);
                 }
-                else
+                else if (key == BUTTONTOGGLESIT)
                 {
                     PacketTransform packet = new PacketTransform();
                     packet.id = player.getEntityId();

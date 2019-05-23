@@ -23,10 +23,6 @@ import thut.api.maths.Vector3;
 
 public class GuiAsPokemob extends GuiDisplayPokecubeInfo
 {
-    /** Set when left clicked when holding alt, this sets the move to be
-     * used. */
-    public static boolean useMove = false;
-
     public GuiAsPokemob()
     {
         super();
@@ -57,8 +53,7 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
             super.pokemobAttack();
             return;
         }
-        if (!useMove || pokemob.getAttackCooldown() > 0) return;
-        useMove = false;
+        if (pokemob.getAttackCooldown() > 0) return;
         EntityPlayer player = minecraft.player;
         Entity target = Tools.getPointedEntity(player, 32);
         Vector3 targetLocation = Tools.getPointedLocation(player, 32);

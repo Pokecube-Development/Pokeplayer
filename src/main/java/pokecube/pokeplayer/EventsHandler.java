@@ -12,11 +12,9 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
@@ -45,11 +43,6 @@ public class EventsHandler
         EventsHandler.proxy = proxy;
         MinecraftForge.EVENT_BUS.register(this);
         PokecubeMod.MOVE_BUS.register(this);
-    }
-
-    @SubscribeEvent
-    public void interactEvent(PlayerInteractEvent.RightClickItem event)
-    {
     }
 
     @SubscribeEvent
@@ -88,20 +81,6 @@ public class EventsHandler
             if (pokemob != null)
             {
                 pokemob.getEntity().attackEntityFrom(event.getSource(), event.getAmount());
-                event.setCanceled(true);
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public void onDamaged(LivingDamageEvent event)
-    {
-        if (event.getEntity() instanceof EntityPlayer)
-        {
-            IPokemob pokemob = proxy.getPokemob((EntityPlayer) event.getEntity());
-            if (pokemob != null)
-            {
-                System.out.println("D" + event.getAmount());
             }
         }
     }
@@ -135,20 +114,7 @@ public class EventsHandler
     public void PlayerDeath(LivingDeathEvent evt)
     {
         if (evt.getEntityLiving().getEntityWorld().isRemote) return;
-        if (!(evt.getEntityLiving() instanceof EntityPlayer))
-        {
-            if (evt.getEntityLiving().getEntityData().getBoolean("isPlayer")
-                    && CapabilityPokemob.getPokemobFor(evt.getEntityLiving()) != null)
-            {
-                Entity real = evt.getEntityLiving().getEntityWorld().getEntityByID(evt.getEntity().getEntityId());
-                if (real != evt.getEntity() && real instanceof EntityPlayerMP)
-                {
-                    EntityPlayerMP player = (EntityPlayerMP) real;
-                    player.attackEntityFrom(evt.getSource(), Float.MAX_VALUE);
-                }
-            }
-            return;
-        }
+        if (!(evt.getEntityLiving() instanceof EntityPlayer)) return;
         EntityPlayer player = (EntityPlayer) evt.getEntityLiving();
         if (player != null)
         {
@@ -158,6 +124,8 @@ public class EventsHandler
                 ItemStack stack = PokecubeManager.pokemobToItem(pokemob);
                 PokecubeManager.heal(stack);
                 pokemob = PokecubeManager.itemToPokemob(stack, player.getEntityWorld());
+                pokemob.getEntity().isDead = false;
+                pokemob.getEntity().deathTime = -1;
                 proxy.setPokemob(player, pokemob);
                 PacketTransform.sendPacket(player, (EntityPlayerMP) player);
             }

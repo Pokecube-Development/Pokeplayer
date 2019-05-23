@@ -12,6 +12,8 @@ import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.Move_Base;
 import pokecube.core.interfaces.PokecubeMod;
+import pokecube.core.interfaces.capabilities.CapabilityPokemob;
+import pokecube.core.interfaces.pokemob.ai.CombatStates;
 import pokecube.core.moves.MovesUtils;
 import thut.api.maths.Vector3;
 
@@ -24,6 +26,7 @@ public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.comman
         // Use default handling, which just agros stuff.
         if (!pokemob.getEntity().getEntityData().getBoolean("isPlayer"))
         {
+            if (PokecubeMod.debug) PokecubeMod.log(Level.INFO, "Directing command to default AttackEntityHandler");
             super.handleCommand(pokemob);
             return;
         }
@@ -56,6 +59,8 @@ public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.comman
             {
                 pokemob.getEntity().setAttackTarget((EntityLivingBase) target);
                 if (target instanceof EntityLiving) ((EntityLiving) target).setAttackTarget(pokemob.getEntity());
+                IPokemob targ = CapabilityPokemob.getPokemobFor(target);
+                if (targ != null) targ.setCombatState(CombatStates.ANGRY, true);
                 // Checks if within range
                 float dist = target.getDistance(pokemob.getEntity());
                 double range = (move.getAttackCategory() & IMoveConstants.CATEGORY_DISTANCE) > 0

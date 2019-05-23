@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -108,20 +109,23 @@ public class ProxyClient extends Proxy
         if (GuiScreen.isAltKeyDown() && button >= 0
                 && (pokemob = getPokemob(player = PokecubeCore.proxy.getPlayer((UUID) null))) != null)
         {
-            if (event.getButton() == 0 && event.isButtonstate())
+            if (button == 0 && event.isButtonstate())
             {
-                GuiAsPokemob.useMove = true;
                 GuiDisplayPokecubeInfo.instance().pokemobAttack();
-                event.setCanceled(true);
             }
-            if (event.getButton() == 1 && event.isButtonstate())
+            if (button == 1 && event.isButtonstate())
             {
                 // Our custom StanceHandler will do interaction code on -2
                 PacketCommand.sendCommand(pokemob, Command.STANCE, new StanceHandler(true, (byte) -2));
 
                 EntityInteractSpecific evt = new EntityInteractSpecific(player, EnumHand.MAIN_HAND, pokemob.getEntity(),
                         new Vec3d(0, 0, 0));
+                // Apply interaction, also do not allow saddle.
+                ItemStack saddle = pokemob.getPokemobInventory().getStackInSlot(0);
+                if (!saddle.isEmpty()) pokemob.getPokemobInventory().setInventorySlotContents(0, ItemStack.EMPTY);
                 PokecubeCore.instance.events.interactEvent(evt);
+                if (!saddle.isEmpty()) pokemob.getPokemobInventory().setInventorySlotContents(0, saddle);
+
                 event.setCanceled(true);
             }
         }
