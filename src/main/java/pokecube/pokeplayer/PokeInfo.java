@@ -9,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -43,6 +44,7 @@ public class PokeInfo extends PlayerData
 
     private ItemStack             stack;
     private IPokemob              pokemob;
+    public DamageSource           lastDamage = null;
     public InventoryPlayerPokemob pokeInventory;
     public float                  originalHeight;
     public float                  originalWidth;
@@ -203,7 +205,18 @@ public class PokeInfo extends PlayerData
             packet.data.setFloat("H", health);
             PokecubeMod.packetPipeline.sendTo(packet, (EntityPlayerMP) player);
         }
-        player.setHealth(health);
+
+        /** If this is going to kill the player, do it with an attack, as this
+         * will properly kill the player. */
+        if (health <= 0)
+        {
+            DamageSource source = lastDamage == null ? DamageSource.GENERIC : lastDamage;
+            source.setDamageBypassesArmor().setDamageIsAbsolute();
+            player.attackEntityFrom(source, Float.MAX_VALUE);
+        }
+        else player.setHealth(health);
+
+        lastDamage = null;
         int num = pokemob.getHungerTime();
         int max = PokecubeMod.core.getConfig().pokemobLifeSpan;
         num = Math.round(((max - num) * 20) / (float) max);

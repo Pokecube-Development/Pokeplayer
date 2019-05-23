@@ -32,6 +32,7 @@ import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.items.pokecubes.PokecubeManager;
 import pokecube.pokeplayer.network.DataSyncWrapper;
 import pokecube.pokeplayer.network.PacketTransform;
+import thut.core.common.handlers.PlayerDataHandler;
 
 public class EventsHandler
 {
@@ -73,15 +74,36 @@ public class EventsHandler
     }
 
     @SubscribeEvent
+    /** Sync attacks to the players over to the pokemobs, and also notifiy the
+     * pokeinfo that the pokemob was attacked.
+     * 
+     * @param event */
     public void onAttacked(LivingAttackEvent event)
     {
+        if (event.getEntity().getEntityWorld().isRemote) return;
+        EntityPlayer player = null;
         if (event.getEntity() instanceof EntityPlayer)
         {
-            IPokemob pokemob = proxy.getPokemob((EntityPlayer) event.getEntity());
+            player = (EntityPlayer) event.getEntity();
+            IPokemob pokemob = proxy.getPokemob(player);
             if (pokemob != null)
             {
                 pokemob.getEntity().attackEntityFrom(event.getSource(), event.getAmount());
             }
+        }
+        else if (event.getEntityLiving().getEntityData().getBoolean("isPlayer"))
+        {
+            IPokemob evo = CapabilityPokemob.getPokemobFor(event.getEntity());
+            if (evo != null)
+            {
+                UUID uuid = UUID.fromString(event.getEntity().getEntityData().getString("playerID"));
+                player = event.getEntity().getEntityWorld().getPlayerEntityByUUID(uuid);
+            }
+        }
+        if (player != null)
+        {
+            PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+            info.lastDamage = event.getSource();
         }
     }
 
