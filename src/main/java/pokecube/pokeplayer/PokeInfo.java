@@ -204,17 +204,19 @@ public class PokeInfo extends PlayerData
             packet.data.setBoolean("U", true);
             packet.data.setFloat("H", health);
             PokecubeMod.packetPipeline.sendTo(packet, (EntityPlayerMP) player);
-        }
 
-        /** If this is going to kill the player, do it with an attack, as this
-         * will properly kill the player. */
-        if (health <= 0)
-        {
-            DamageSource source = lastDamage == null ? DamageSource.GENERIC : lastDamage;
-            source.setDamageBypassesArmor().setDamageIsAbsolute();
-            player.attackEntityFrom(source, Float.MAX_VALUE);
+            /** If this is going to kill the player, do it with an attack, as
+             * this will properly kill the player. */
+            if (health <= 0 || lastDamage != null)
+            {
+                DamageSource source = lastDamage == null ? DamageSource.GENERIC : lastDamage;
+                float amount = health <= 0 ? Float.MAX_VALUE : player.getHealth() - health;
+                source.setDamageBypassesArmor().setDamageIsAbsolute();
+                player.attackEntityFrom(source, amount);
+                poke.setHealth(player.getHealth());
+            }
+            else player.setHealth(health);
         }
-        else player.setHealth(health);
 
         lastDamage = null;
         int num = pokemob.getHungerTime();
