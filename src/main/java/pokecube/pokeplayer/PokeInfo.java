@@ -57,7 +57,7 @@ public class PokeInfo extends PlayerData
     public void set(IPokemob pokemob, EntityPlayer player)
     {
         if (this.pokemob != null || pokemob == null) resetPlayer(player);
-        if (pokemob == null) return;
+        if (pokemob == null || this.pokemob == pokemob) return;
         this.pokemob = pokemob;
         this.pokeInventory = new InventoryPlayerPokemob(this, player.getEntityWorld());
         this.originalHeight = player.height;
@@ -78,7 +78,6 @@ public class PokeInfo extends PlayerData
         DataSync sync = SyncHandler.getData(player);
         if (sync instanceof DataSyncWrapper)
         {
-            // TODO see if this is working.
             ((DataSyncWrapper) sync).wrapped = pokemob.dataSync();
         }
         save(player);
@@ -89,7 +88,6 @@ public class PokeInfo extends PlayerData
         DataSync sync = SyncHandler.getData(player);
         if (sync instanceof DataSyncWrapper)
         {
-            // TODO see if this is working.
             ((DataSyncWrapper) sync).wrapped = sync;
         }
         if (pokemob == null && !player.getEntityWorld().isRemote) return;
@@ -120,7 +118,6 @@ public class PokeInfo extends PlayerData
         DataSync sync = SyncHandler.getData(player);
         if (sync instanceof DataSyncWrapper)
         {
-            // TODO see if this is working.
             ((DataSyncWrapper) sync).wrapped = pokemob.dataSync();
         }
         pokemob.setSize((float) (pokemob.getSize() / PokecubeMod.core.getConfig().scalefactor));
@@ -150,6 +147,10 @@ public class PokeInfo extends PlayerData
         if (!player.getEntityWorld().isRemote)
         {
             EventsHandler.sendUpdate(player);
+            ((EntityPlayerMP) player).sendAllContents(player.inventoryContainer,
+                    player.inventoryContainer.inventoryItemStacks);
+            // // Fixes the inventories appearing to vanish
+            player.getEntityData().setLong("_pokeplayer_evolved_", player.getEntityWorld().getTotalWorldTime() + 50);
         }
     }
 
@@ -207,16 +208,27 @@ public class PokeInfo extends PlayerData
 
             /** If this is going to kill the player, do it with an attack, as
              * this will properly kill the player. */
-            if (health <= 0 || lastDamage != null)
+            if (health < player.getHealth() || lastDamage != null)
             {
                 DamageSource source = lastDamage == null ? DamageSource.GENERIC : lastDamage;
-                float amount = health <= 0 ? Float.MAX_VALUE : player.getHealth() - health;
+                float amount = player.getHealth() - health;
                 source.setDamageBypassesArmor().setDamageIsAbsolute();
                 player.attackEntityFrom(source, amount);
                 poke.setHealth(player.getHealth());
             }
-            else player.setHealth(health);
+            else if (health > player.getHealth()) player.setHealth(health);
+
+            // Fixes the inventories appearing to vanish
+            if (player.getEntityData().hasKey("_pokeplayer_evolved_") && player.getEntityData()
+                    .getLong("_pokeplayer_evolved_") > player.getEntityWorld().getTotalWorldTime())
+            {
+                ((EntityPlayerMP) player).sendAllContents(player.inventoryContainer,
+                        player.inventoryContainer.inventoryItemStacks);
+            }
+            else player.getEntityData().removeTag("_pokeplayer_evolved_");
         }
+        if (player.getHealth() > 0) player.deathTime = -1;
+        poke.deathTime = player.deathTime;
 
         lastDamage = null;
         int num = pokemob.getHungerTime();

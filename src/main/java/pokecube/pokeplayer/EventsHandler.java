@@ -20,8 +20,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 import pokecube.core.events.pokemob.EvolveEvent;
 import pokecube.core.events.pokemob.RecallEvent;
@@ -44,19 +42,6 @@ public class EventsHandler
         EventsHandler.proxy = proxy;
         MinecraftForge.EVENT_BUS.register(this);
         PokecubeMod.MOVE_BUS.register(this);
-    }
-
-    @SubscribeEvent
-    public void onPlayerTick(TickEvent.PlayerTickEvent event)
-    {
-        IPokemob pokemob = proxy.getPokemob(event.player);
-        if (pokemob != null) pokemob.getEntity().addedToChunk = true;
-        if (event.phase == Phase.END)
-        {
-            if (event.player.getHealth() <= 0) { return; }
-            event.player.addedToChunk = true;
-            proxy.updateInfo(event.player);
-        }
     }
 
     @SubscribeEvent
@@ -167,7 +152,8 @@ public class EventsHandler
             evt.setCanceled(true);
             if (!player.getEntityWorld().isRemote)
             {
-                PacketTransform.sendPacket(player, (EntityPlayerMP) player);
+                EntityPlayerMP playerMP = (EntityPlayerMP) player;
+                PacketTransform.sendPacket(player, playerMP);
             }
             return;
         }
@@ -203,6 +189,15 @@ public class EventsHandler
     @SubscribeEvent
     public void playerTick(LivingUpdateEvent event)
     {
+        if (event.getEntity() instanceof EntityPlayer)
+        {
+            EntityPlayer player = (EntityPlayer) event.getEntity();
+            IPokemob pokemob = proxy.getPokemob(player);
+            if (pokemob != null) pokemob.getEntity().addedToChunk = true;
+            player.addedToChunk = true;
+            proxy.updateInfo(player);
+        }
+
         if (event.getEntityLiving().getEntityWorld().isRemote) return;
         if (event.getEntity() instanceof EntityPlayerMP)
         {
@@ -234,7 +229,7 @@ public class EventsHandler
     }
 
     @SubscribeEvent
-    public void PlayerJoinWorld(EntityJoinWorldEvent evt)
+    public void entityJoinWorld(EntityJoinWorldEvent evt)
     {
         if (evt.getEntity().getEntityData().getBoolean("isPlayer"))
         {
