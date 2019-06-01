@@ -51,6 +51,8 @@ public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.comman
         if (!event.isCanceled() && currentMove != 5 && MovesUtils.canUseMove(pokemob))
         {
             Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
+            pokemob.setCombatState(CombatStates.EXECUTINGMOVE, false);
+            pokemob.setCombatState(CombatStates.NOITEMUSE, false);
             if (move.isSelfMove())
             {
                 pokemob.executeMove(pokemob.getEntity(), null, 0);

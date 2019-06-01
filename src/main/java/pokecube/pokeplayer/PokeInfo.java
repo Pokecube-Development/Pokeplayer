@@ -193,30 +193,48 @@ public class PokeInfo extends PlayerData
             poke.setHealth(poke.getMaxHealth());
             pokemob.setHungerTime(-PokecubeMod.core.getConfig().pokemobLifeSpan / 4);
         }
-        else player.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(poke.getMaxHealth());
+        player.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(poke.getMaxHealth());
 
         float health = poke.getHealth();
         poke.nextStepDistance = Integer.MAX_VALUE;
         EntityTools.copyEntityTransforms(poke, player);
-        if (player instanceof EntityPlayerMP && player.addedToChunk)
+        /** do not manage hp for creative mode players. */
+        if (!player.capabilities.isCreativeMode) if (player instanceof EntityPlayerMP && player.addedToChunk)
         {
+            float playerHealth = player.getHealth();
+            if (health != playerHealth) System.out.println(health + " " + playerHealth);
+            /** Player has healed somehow, this is fine. */
+            if (playerHealth > health && lastDamage == null && health > 0 && playerHealth <= poke.getMaxHealth())
+            {
+                if (poke.getAttackTarget() == null) health = playerHealth;
+                else playerHealth = health;
+            }
+
+            /** If this is going to kill the player, do it with an attack, as
+             * this will properly kill the player. */
+            if (health < playerHealth)
+            {
+                DamageSource source = lastDamage == null ? DamageSource.GENERIC : lastDamage;
+                float amount = playerHealth - health;
+                source.setDamageBypassesArmor().setDamageIsAbsolute();
+                player.attackEntityFrom(source, amount);
+            }
+            else player.setHealth(health);
+
+            // Sync pokehealth to player health.
+            playerHealth = player.getHealth();
+            poke.setHealth(playerHealth);
+
+            lastDamage = null;
+
+            health = playerHealth;
+
             PacketTransform packet = new PacketTransform();
             packet.id = player.getEntityId();
             packet.data.setBoolean("U", true);
             packet.data.setFloat("H", health);
+            packet.data.setFloat("M", poke.getMaxHealth());
             PokecubeMod.packetPipeline.sendTo(packet, (EntityPlayerMP) player);
-
-            /** If this is going to kill the player, do it with an attack, as
-             * this will properly kill the player. */
-            if (health < player.getHealth() || lastDamage != null)
-            {
-                DamageSource source = lastDamage == null ? DamageSource.GENERIC : lastDamage;
-                float amount = player.getHealth() - health;
-                source.setDamageBypassesArmor().setDamageIsAbsolute();
-                player.attackEntityFrom(source, amount);
-                poke.setHealth(player.getHealth());
-            }
-            else if (health > player.getHealth()) player.setHealth(health);
 
             // Fixes the inventories appearing to vanish
             if (player.getEntityData().hasKey("_pokeplayer_evolved_") && player.getEntityData()
@@ -230,7 +248,6 @@ public class PokeInfo extends PlayerData
         if (player.getHealth() > 0) player.deathTime = -1;
         poke.deathTime = player.deathTime;
 
-        lastDamage = null;
         int num = pokemob.getHungerTime();
         int max = PokecubeMod.core.getConfig().pokemobLifeSpan;
         num = Math.round(((max - num) * 20) / (float) max);

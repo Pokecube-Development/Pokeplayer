@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -94,6 +95,8 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
                 if (pokemob == null) { return; }
                 float health = message.data.getFloat("H");
                 if (pokemob.getEntity() == null) return;
+                float max = message.data.getFloat("M");
+                pokemob.getEntity().getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(max);
                 pokemob.setHealth(health);
                 player.setHealth(health);
             }

@@ -12,7 +12,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -115,28 +114,6 @@ public class EventsHandler
     public void recall(RecallEvent.Pre evt)
     {
         if (evt.recalled.getEntity().getEntityData().getBoolean("isPlayer")) evt.setCanceled(true);
-    }
-
-    @SubscribeEvent
-    public void PlayerDeath(LivingDeathEvent evt)
-    {
-        if (evt.getEntityLiving().getEntityWorld().isRemote) return;
-        if (!(evt.getEntityLiving() instanceof EntityPlayer)) return;
-        EntityPlayer player = (EntityPlayer) evt.getEntityLiving();
-        if (player != null)
-        {
-            IPokemob pokemob = proxy.getPokemob(player);
-            if (pokemob != null)
-            {
-                ItemStack stack = PokecubeManager.pokemobToItem(pokemob);
-                PokecubeManager.heal(stack);
-                pokemob = PokecubeManager.itemToPokemob(stack, player.getEntityWorld());
-                pokemob.getEntity().isDead = false;
-                pokemob.getEntity().deathTime = -1;
-                proxy.setPokemob(player, pokemob);
-                PacketTransform.sendPacket(player, (EntityPlayerMP) player);
-            }
-        }
     }
 
     @SubscribeEvent

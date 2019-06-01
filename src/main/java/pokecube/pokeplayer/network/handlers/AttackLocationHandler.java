@@ -8,6 +8,7 @@ import net.minecraftforge.common.MinecraftForge;
 import pokecube.core.events.pokemob.combat.CommandAttackEvent;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.Move_Base;
+import pokecube.core.interfaces.pokemob.ai.CombatStates;
 import pokecube.core.moves.MovesUtils;
 import pokecube.core.network.pokemobs.PacketCommand.DefaultHandler;
 import thut.api.maths.Vector3;
@@ -37,6 +38,8 @@ public class AttackLocationHandler extends DefaultHandler
 
             if (!evt.isCanceled() && currentMove != 5 && MovesUtils.canUseMove(pokemob))
             {
+                pokemob.setCombatState(CombatStates.EXECUTINGMOVE, false);
+                pokemob.setCombatState(CombatStates.NOITEMUSE, false);
                 Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
                 // Send move use message first.
                 ITextComponent mess = new TextComponentTranslation("pokemob.action.usemove",
