@@ -202,7 +202,7 @@ public class PokeInfo extends PlayerData
         if (!player.capabilities.isCreativeMode) if (player instanceof EntityPlayerMP && player.addedToChunk)
         {
             float playerHealth = player.getHealth();
-            if (health != playerHealth) System.out.println(health + " " + playerHealth);
+
             /** Player has healed somehow, this is fine. */
             if (playerHealth > health && lastDamage == null && health > 0 && playerHealth <= poke.getMaxHealth())
             {

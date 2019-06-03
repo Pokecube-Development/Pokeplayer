@@ -112,6 +112,7 @@ public class ProxyClient extends Proxy
             if (button == 0 && event.isButtonstate())
             {
                 GuiDisplayPokecubeInfo.instance().pokemobAttack();
+                event.setCanceled(true);
             }
             if (button == 1 && event.isButtonstate())
             {
@@ -125,7 +126,6 @@ public class ProxyClient extends Proxy
                 if (!saddle.isEmpty()) pokemob.getPokemobInventory().setInventorySlotContents(0, ItemStack.EMPTY);
                 PokecubeCore.instance.events.interactEvent(evt);
                 if (!saddle.isEmpty()) pokemob.getPokemobInventory().setInventorySlotContents(0, saddle);
-
                 event.setCanceled(true);
             }
         }

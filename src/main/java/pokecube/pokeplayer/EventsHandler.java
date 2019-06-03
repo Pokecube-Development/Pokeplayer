@@ -13,6 +13,7 @@ import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -26,7 +27,10 @@ import pokecube.core.events.pokemob.combat.AttackEvent;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
+import pokecube.core.interfaces.pokemob.IHasCommands.Command;
+import pokecube.core.interfaces.pokemob.commandhandlers.AttackEntityHandler;
 import pokecube.core.items.pokecubes.PokecubeManager;
+import pokecube.core.network.pokemobs.PacketCommand;
 import pokecube.pokeplayer.network.DataSyncWrapper;
 import pokecube.pokeplayer.network.PacketTransform;
 import thut.core.common.handlers.PlayerDataHandler;
@@ -58,11 +62,22 @@ public class EventsHandler
     }
 
     @SubscribeEvent
+    public void attack(AttackEntityEvent event)
+    {
+        EntityPlayer player = event.getEntityPlayer();
+        IPokemob pokemob = proxy.getPokemob(player);
+        if (pokemob == null) return;
+        PacketCommand.sendCommand(pokemob, Command.ATTACKENTITY,
+                new AttackEntityHandler(event.getTarget().getEntityId()).setFromOwner(true));
+        event.setCanceled(true);
+    }
+
+    @SubscribeEvent
     /** Sync attacks to the players over to the pokemobs, and also notifiy the
      * pokeinfo that the pokemob was attacked.
      * 
      * @param event */
-    public void onAttacked(LivingAttackEvent event)
+    public void attack(LivingAttackEvent event)
     {
         if (event.getEntity().getEntityWorld().isRemote) return;
         EntityPlayer player = null;
