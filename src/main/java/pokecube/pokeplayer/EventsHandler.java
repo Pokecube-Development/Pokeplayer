@@ -67,7 +67,7 @@ public class EventsHandler
         EntityPlayer player = event.getEntityPlayer();
         IPokemob pokemob = proxy.getPokemob(player);
         if (pokemob == null) return;
-        PacketCommand.sendCommand(pokemob, Command.ATTACKENTITY,
+        if (player.getEntityWorld().isRemote) PacketCommand.sendCommand(pokemob, Command.ATTACKENTITY,
                 new AttackEntityHandler(event.getTarget().getEntityId()).setFromOwner(true));
         event.setCanceled(true);
     }
@@ -114,13 +114,23 @@ public class EventsHandler
             IPokemob pokemob = proxy.getPokemob(event.player);
             if (pokemob != null)
             {
+                EntityPlayerMP player = (EntityPlayerMP) event.player;
                 ItemStack stack = PokecubeManager.pokemobToItem(pokemob);
                 PokecubeManager.heal(stack);
                 pokemob = PokecubeManager.itemToPokemob(stack, event.player.getEntityWorld());
                 pokemob.getEntity().isDead = false;
                 pokemob.getEntity().deathTime = -1;
                 proxy.setPokemob(event.player, pokemob);
-                PacketTransform.sendPacket(event.player, (EntityPlayerMP) event.player);
+                PacketTransform.sendPacket(event.player, player);
+                if (!player.getEntityWorld().isRemote)
+                {
+                    EventsHandler.sendUpdate(player);
+                    ((EntityPlayerMP) player).sendAllContents(player.inventoryContainer,
+                            player.inventoryContainer.inventoryItemStacks);
+                    // // Fixes the inventories appearing to vanish
+                    player.getEntityData().setLong("_pokeplayer_evolved_",
+                            player.getEntityWorld().getTotalWorldTime() + 50);
+                }
             }
         }
     }
@@ -146,6 +156,15 @@ public class EventsHandler
             {
                 EntityPlayerMP playerMP = (EntityPlayerMP) player;
                 PacketTransform.sendPacket(player, playerMP);
+                if (!player.getEntityWorld().isRemote)
+                {
+                    EventsHandler.sendUpdate(player);
+                    ((EntityPlayerMP) player).sendAllContents(player.inventoryContainer,
+                            player.inventoryContainer.inventoryItemStacks);
+                    // // Fixes the inventories appearing to vanish
+                    player.getEntityData().setLong("_pokeplayer_evolved_",
+                            player.getEntityWorld().getTotalWorldTime() + 50);
+                }
             }
             return;
         }
