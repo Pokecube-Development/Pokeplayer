@@ -265,6 +265,9 @@ public class PokeInfo extends PlayerData
         updateFloating(player);
         updateFlying(player);
         updateSwimming(player);
+
+        // Synchronize the hitbox locations
+        poke.setPosition(player.posX, player.posY, player.posZ);
     }
 
     public void clear()
