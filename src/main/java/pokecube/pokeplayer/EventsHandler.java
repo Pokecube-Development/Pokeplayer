@@ -203,9 +203,6 @@ public class EventsHandler
         if (event.getEntity() instanceof EntityPlayer)
         {
             EntityPlayer player = (EntityPlayer) event.getEntity();
-            IPokemob pokemob = proxy.getPokemob(player);
-            if (pokemob != null) pokemob.getEntity().addedToChunk = true;
-            player.addedToChunk = true;
             proxy.updateInfo(player);
         }
 

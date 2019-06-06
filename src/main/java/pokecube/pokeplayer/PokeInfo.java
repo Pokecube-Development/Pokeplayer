@@ -185,7 +185,11 @@ public class PokeInfo extends PlayerData
         // Ensure it is tamed.
         if (!pokemob.getGeneralState(GeneralStates.TAMED)) pokemob.setGeneralState(GeneralStates.TAMED, true);
         // Update the mob.
+        poke.addedToChunk = true;
+        // Synchronize the hitbox locations
+        poke.noClip = true;
         poke.onUpdate();
+        poke.addedToChunk = false;
 
         // Deal with health
         if (player.capabilities.isCreativeMode)
