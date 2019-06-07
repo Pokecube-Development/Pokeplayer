@@ -131,6 +131,7 @@ public class PokeInfo extends PlayerData
         float height = pokemob.getSize() * pokemob.getPokedexEntry().height;
         float width = pokemob.getSize() * pokemob.getPokedexEntry().width;
         player.eyeHeight = pokemob.getEntity().getEyeHeight();
+        width = Math.min(player.width, width);
         if (player.height != height || player.width != width)
         {
             player.firstUpdate = true;
@@ -158,6 +159,7 @@ public class PokeInfo extends PlayerData
         float height = pokemob.getSize() * pokemob.getPokedexEntry().height;
         float width = pokemob.getSize() * pokemob.getPokedexEntry().width;
         player.eyeHeight = pokemob.getEntity().getEyeHeight();
+        width = Math.min(player.width, width);
         if (player.height != height || player.width != width)
         {
             player.firstUpdate = true;
