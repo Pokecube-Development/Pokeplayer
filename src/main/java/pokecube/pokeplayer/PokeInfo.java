@@ -2,7 +2,6 @@ package pokecube.pokeplayer;
 
 import java.util.function.Predicate;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
@@ -13,7 +12,6 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import pokecube.core.ai.thread.aiRunnables.combat.AIFindTarget;
 import pokecube.core.ai.thread.aiRunnables.idle.AIHungry;
 import pokecube.core.ai.thread.aiRunnables.idle.AIMate;
@@ -36,12 +34,9 @@ import thut.api.world.mobs.data.DataSync;
 import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.handlers.PlayerDataHandler.PlayerData;
 import thut.core.common.world.mobs.data.SyncHandler;
-import thut.lib.Accessor;
 
 public class PokeInfo extends PlayerData
 {
-    private static final int      FIELDINDEX = 53;
-
     private ItemStack             stack;
     private IPokemob              pokemob;
     public DamageSource           lastDamage = null;
@@ -95,11 +90,11 @@ public class PokeInfo extends PlayerData
         player.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(originalHP);
         float height = originalHeight;
         float width = originalWidth;
-        if (player.height != height || player.width != width)
+        if (player.height != height)
         {
-            ReflectionHelper.setPrivateValue(Entity.class, player, true, FIELDINDEX);
-            Accessor.size(player, player.width, height);
-            ReflectionHelper.setPrivateValue(Entity.class, player, false, FIELDINDEX);
+            player.firstUpdate = true;
+            player.setSize(width, height);
+            player.firstUpdate = false;
         }
         setFlying(player, false);
         pokemob = null;
@@ -138,9 +133,9 @@ public class PokeInfo extends PlayerData
         player.eyeHeight = pokemob.getEntity().getEyeHeight();
         if (player.height != height || player.width != width)
         {
-            ReflectionHelper.setPrivateValue(Entity.class, player, true, FIELDINDEX);
-            Accessor.size(player, player.width, height);
-            ReflectionHelper.setPrivateValue(Entity.class, player, false, FIELDINDEX);
+            player.firstUpdate = true;
+            player.setSize(width, height);
+            player.firstUpdate = false;
         }
         setFlying(player, true);
         save(player);
@@ -154,6 +149,23 @@ public class PokeInfo extends PlayerData
         }
     }
 
+    /** This fixes EntityPlayer.updateSize() resetting the size.
+     * 
+     * @param player */
+    public void postPlayerTick(EntityPlayer player)
+    {
+        if (pokemob == null) return;
+        float height = pokemob.getSize() * pokemob.getPokedexEntry().height;
+        float width = pokemob.getSize() * pokemob.getPokedexEntry().width;
+        player.eyeHeight = pokemob.getEntity().getEyeHeight();
+        if (player.height != height || player.width != width)
+        {
+            player.firstUpdate = true;
+            player.setSize(width, height);
+            player.firstUpdate = false;
+        }
+    }
+
     public void onUpdate(EntityPlayer player)
     {
         if (getPokemob(player.getEntityWorld()) == null && stack != null)
@@ -162,8 +174,6 @@ public class PokeInfo extends PlayerData
         }
         if (pokemob == null) return;
         EntityLiving poke = pokemob.getEntity();
-        // Ensure the mob has correct world.
-        poke.setWorld(player.getEntityWorld());
 
         // Fixes pokemob sometimes targetting self.
         if (poke.getAttackTarget() == player || poke.getAttackTarget() == poke)
@@ -184,12 +194,19 @@ public class PokeInfo extends PlayerData
 
         // Ensure it is tamed.
         if (!pokemob.getGeneralState(GeneralStates.TAMED)) pokemob.setGeneralState(GeneralStates.TAMED, true);
+
         // Update the mob.
+        // Ensure the mob has correct world.
+        poke.setWorld(player.getEntityWorld());
         poke.addedToChunk = true;
-        // Synchronize the hitbox locations
+        // No clip to prevent collision effects from the mob itself.
         poke.noClip = true;
+
         poke.onUpdate();
-        poke.addedToChunk = false;
+
+        // Update location
+        poke.nextStepDistance = Integer.MAX_VALUE;
+        EntityTools.copyEntityTransforms(poke, player);
 
         // Deal with health
         if (player.capabilities.isCreativeMode)
@@ -200,8 +217,6 @@ public class PokeInfo extends PlayerData
         player.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(poke.getMaxHealth());
 
         float health = poke.getHealth();
-        poke.nextStepDistance = Integer.MAX_VALUE;
-        EntityTools.copyEntityTransforms(poke, player);
         /** do not manage hp for creative mode players. */
         if (!player.capabilities.isCreativeMode) if (player instanceof EntityPlayerMP && player.addedToChunk)
         {
@@ -257,15 +272,7 @@ public class PokeInfo extends PlayerData
         num = Math.round(((max - num) * 20) / (float) max);
         if (player.capabilities.isCreativeMode) num = 20;
         player.getFoodStats().setFoodLevel(num);
-        float height = pokemob.getSize() * pokemob.getPokedexEntry().height;
-        float width = pokemob.getSize() * pokemob.getPokedexEntry().width;
-        player.eyeHeight = poke.getEyeHeight();
-        if (player.height != height || player.width != width)
-        {
-            ReflectionHelper.setPrivateValue(Entity.class, player, true, FIELDINDEX);
-            Accessor.size(player, player.width, height);
-            ReflectionHelper.setPrivateValue(Entity.class, player, false, FIELDINDEX);
-        }
+
         updateFloating(player);
         updateFlying(player);
         updateSwimming(player);
