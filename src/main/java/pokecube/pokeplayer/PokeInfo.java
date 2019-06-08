@@ -195,8 +195,9 @@ public class PokeInfo extends PlayerData
         }
 
         // Ensure it is tamed.
-        if (!pokemob.getGeneralState(GeneralStates.TAMED)) pokemob.setGeneralState(GeneralStates.TAMED, true);
-
+        pokemob.setGeneralState(GeneralStates.TAMED, true);
+        // No Stay mode for pokeplayers.
+        pokemob.setGeneralState(GeneralStates.STAYING, false);
         // Update the mob.
         // Ensure the mob has correct world.
         poke.setWorld(player.getEntityWorld());
