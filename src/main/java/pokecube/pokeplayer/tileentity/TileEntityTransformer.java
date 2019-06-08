@@ -5,12 +5,12 @@ import java.util.Random;
 
 import com.google.common.collect.Lists;
 
+import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ITickable;
 import net.minecraft.world.WorldServer;
 import pokecube.core.blocks.TileEntityOwnable;
 import pokecube.core.database.Database;
