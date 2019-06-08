@@ -74,7 +74,7 @@ public class PokePlayer
         PlayerDataHandler.dataMap.add(PokeInfo.class);
         PROXY.init();
         PokecubeMod.packetPipeline.registerMessage(PacketTransform.class, PacketTransform.class,
-                PokecubeCore.getMessageID(), Side.CLIENT);
+                PokecubeCore.getMessageID(), Dist.CLIENT);
     }
 
     @EventHandler
@@ -105,7 +105,7 @@ public class PokePlayer
     {
         Object registry = evt.getRegistry();
         PokecubeItems.register(new ItemBlock(transformer).setRegistryName(transformer.getRegistryName()), registry);
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
+        if (FMLCommonHandler.instance().getEffectiveSide() == Dist.CLIENT)
         {
             PokecubeItems.registerItemTexture(Item.getItemFromBlock(transformer), 0,
                     new ModelResourceLocation("pokeplayer:poketransformer", "inventory"));

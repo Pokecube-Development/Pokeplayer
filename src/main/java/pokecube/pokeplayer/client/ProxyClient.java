@@ -5,9 +5,9 @@ import java.util.logging.Level;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderHandEvent;
@@ -33,7 +33,7 @@ import thut.core.common.handlers.PlayerDataHandler;
 public class ProxyClient extends Proxy
 {
     @Override
-    public IPokemob getPokemob(EntityPlayer player)
+    public IPokemob getPokemob(PlayerEntity player)
     {
         IPokemob ret = super.getPokemob(player);
         if (ret != null && player.getEntityWorld().isRemote)
@@ -61,12 +61,12 @@ public class ProxyClient extends Proxy
     public void onPlayerTick(TickEvent.PlayerTickEvent event)
     {
         IPokemob pokemob;
-        if (event.side == Side.SERVER || event.player != PokecubeCore.proxy.getPlayer((String) null)
+        if (event.side == Dist.DEDICATED_SERVER || event.player != PokecubeCore.proxy.getPlayer((String) null)
                 || (pokemob = getPokemob(event.player)) == null)
             return;
-        if (Minecraft.getMinecraft().currentScreen instanceof GuiPokedex)
+        if (Minecraft.getInstance().currentScreen instanceof GuiPokedex)
         {
-            ((GuiPokedex) Minecraft.getMinecraft().currentScreen).pokemob = pokemob;
+            ((GuiPokedex) Minecraft.getInstance().currentScreen).pokemob = pokemob;
             GuiPokedex.pokedexEntry = pokemob.getPokedexEntry();
         }
     }
@@ -74,21 +74,21 @@ public class ProxyClient extends Proxy
     @SubscribeEvent
     public void pRender(RenderPlayerEvent.Pre event)
     {
-        IPokemob pokemob = getPokemob(event.getEntityPlayer());
+        IPokemob pokemob = getPokemob(event.getPlayerEntity());
         if (pokemob == null) return;
         event.setCanceled(true);
-        boolean shadow = Minecraft.getMinecraft().getRenderManager().isRenderShadow();
-        Minecraft.getMinecraft().getRenderManager().setRenderShadow(false);
+        boolean shadow = Minecraft.getInstance().getRenderManager().isRenderShadow();
+        Minecraft.getInstance().getRenderManager().setRenderShadow(false);
         try
         {
-            Minecraft.getMinecraft().getRenderManager().renderEntity(pokemob.getEntity(), event.getX(), event.getY(),
-                    event.getZ(), event.getEntityPlayer().rotationYaw, event.getPartialRenderTick(), false);
+            Minecraft.getInstance().getRenderManager().renderEntity(pokemob.getEntity(), event.getX(), event.getY(),
+                    event.getZ(), event.getPlayerEntity().rotationYaw, event.getPartialRenderTick(), false);
         }
         catch (Exception e)
         {
             PokecubeMod.log(Level.SEVERE, "Error Rendering Pokeplayer", e);
         }
-        Minecraft.getMinecraft().getRenderManager().setRenderShadow(shadow);
+        Minecraft.getInstance().getRenderManager().setRenderShadow(shadow);
     }
 
     @SubscribeEvent
@@ -103,7 +103,7 @@ public class ProxyClient extends Proxy
     public void mouseClickEvent(MouseEvent event)
     {
         IPokemob pokemob = null;
-        EntityPlayer player = null;
+        PlayerEntity player = null;
         int button = event.getButton();
         if (GuiScreen.isAltKeyDown() && button >= 0
                 && (pokemob = getPokemob(player = PokecubeCore.proxy.getPlayer((UUID) null))) != null)
@@ -118,7 +118,7 @@ public class ProxyClient extends Proxy
                 // Our custom StanceHandler will do interaction code on -2
                 PacketCommand.sendCommand(pokemob, Command.STANCE, new StanceHandler(true, (byte) -2));
 
-                EntityInteractSpecific evt = new EntityInteractSpecific(player, EnumHand.MAIN_HAND, pokemob.getEntity(),
+                EntityInteractSpecific evt = new EntityInteractSpecific(player, Hand.MAIN_HAND, pokemob.getEntity(),
                         new Vec3d(0, 0, 0));
                 // Apply interaction, also do not allow saddle.
                 ItemStack saddle = pokemob.getPokemobInventory().getStackInSlot(0);
@@ -131,7 +131,7 @@ public class ProxyClient extends Proxy
     }
 
     @Override
-    public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
+    public Object getClientGuiElement(int ID, PlayerEntity player, World world, int x, int y, int z)
     {
         return null;
     }

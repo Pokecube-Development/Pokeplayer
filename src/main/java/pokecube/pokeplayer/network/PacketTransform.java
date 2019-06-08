@@ -7,9 +7,9 @@ import javax.xml.ws.handler.MessageContext;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -26,15 +26,15 @@ import thut.core.common.handlers.PlayerDataHandler;
 
 public class PacketTransform implements IMessage, IMessageHandler<PacketTransform, IMessage>
 {
-    public NBTTagCompound data = new NBTTagCompound();
+    public CompoundNBT data = new CompoundNBT();
     public int            id;
 
-    public static void sendPacket(EntityPlayer toSend, EntityPlayerMP sendTo)
+    public static void sendPacket(PlayerEntity toSend, ServerPlayerEntity sendTo)
     {
         PokecubeMod.packetPipeline.sendTo(getPacket(toSend), sendTo);
     }
 
-    public static PacketTransform getPacket(EntityPlayer toSend)
+    public static PacketTransform getPacket(PlayerEntity toSend)
     {
         PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(toSend).getData(PokeInfo.class);
         PacketTransform message = new PacketTransform();
@@ -88,7 +88,7 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
         Entity e = PokecubeMod.core.getEntityProvider().getEntity(world, message.id, false);
         if (message.data.hasKey("U"))
         {
-            EntityPlayer player = PokecubeCore.proxy.getPlayer((String) null);
+            PlayerEntity player = PokecubeCore.proxy.getPlayer((String) null);
             if (message.data.hasKey("H"))
             {
                 PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
@@ -110,9 +110,9 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
             }
             return;
         }
-        if (e instanceof EntityPlayer)
+        if (e instanceof PlayerEntity)
         {
-            EntityPlayer player = (EntityPlayer) e;
+            PlayerEntity player = (PlayerEntity) e;
             PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
             info.clear();
             info.readFromNBT(message.data);

@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.UUID;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -51,9 +51,9 @@ public class EventsHandler
     @SubscribeEvent
     public void pokemobAttack(AttackEvent evt)
     {
-        if (evt.moveInfo.attacked instanceof EntityPlayer)
+        if (evt.moveInfo.attacked instanceof PlayerEntity)
         {
-            EntityPlayer player = (EntityPlayer) evt.moveInfo.attacked;
+            PlayerEntity player = (PlayerEntity) evt.moveInfo.attacked;
             IPokemob pokemob = proxy.getPokemob(player);
             if (pokemob != null)
             {
@@ -65,7 +65,7 @@ public class EventsHandler
     @SubscribeEvent
     public void attack(AttackEntityEvent event)
     {
-        EntityPlayer player = event.getEntityPlayer();
+        PlayerEntity player = event.getPlayerEntity();
         IPokemob pokemob = proxy.getPokemob(player);
         if (pokemob == null) return;
         if (player.getEntityWorld().isRemote) PacketCommand.sendCommand(pokemob, Command.ATTACKENTITY,
@@ -81,17 +81,17 @@ public class EventsHandler
     public void attack(LivingAttackEvent event)
     {
         if (event.getEntity().getEntityWorld().isRemote) return;
-        EntityPlayer player = null;
-        if (event.getEntity() instanceof EntityPlayer)
+        PlayerEntity player = null;
+        if (event.getEntity() instanceof PlayerEntity)
         {
-            player = (EntityPlayer) event.getEntity();
+            player = (PlayerEntity) event.getEntity();
             IPokemob pokemob = proxy.getPokemob(player);
             if (pokemob != null)
             {
                 pokemob.getEntity().attackEntityFrom(event.getSource(), event.getAmount());
             }
         }
-        else if (event.getEntityLiving().getEntityData().getBoolean("isPlayer"))
+        else if (event.getMobEntity().getEntityData().getBoolean("isPlayer"))
         {
             IPokemob evo = CapabilityPokemob.getPokemobFor(event.getEntity());
             if (evo != null)
@@ -115,7 +115,7 @@ public class EventsHandler
             IPokemob pokemob = proxy.getPokemob(event.player);
             if (pokemob != null)
             {
-                EntityPlayerMP player = (EntityPlayerMP) event.player;
+                ServerPlayerEntity player = (ServerPlayerEntity) event.player;
                 ItemStack stack = PokecubeManager.pokemobToItem(pokemob);
                 PokecubeManager.heal(stack);
                 pokemob = PokecubeManager.itemToPokemob(stack, event.player.getEntityWorld());
@@ -126,11 +126,11 @@ public class EventsHandler
                 if (!player.getEntityWorld().isRemote)
                 {
                     EventsHandler.sendUpdate(player);
-                    ((EntityPlayerMP) player).sendAllContents(player.inventoryContainer,
+                    ((ServerPlayerEntity) player).sendAllContents(player.inventoryContainer,
                             player.inventoryContainer.inventoryItemStacks);
                     // // Fixes the inventories appearing to vanish
-                    player.getEntityData().setLong("_pokeplayer_evolved_",
-                            player.getEntityWorld().getTotalWorldTime() + 50);
+                    player.getEntityData().putLong("_pokeplayer_evolved_",
+                            player.getEntityWorld().getGameTime() + 50);
                 }
             }
         }
@@ -149,22 +149,22 @@ public class EventsHandler
         if (entity.getEntityData().getBoolean("isPlayer"))
         {
             UUID uuid = UUID.fromString(entity.getEntityData().getString("playerID"));
-            EntityPlayer player = entity.getEntityWorld().getPlayerEntityByUUID(uuid);
+            PlayerEntity player = entity.getEntityWorld().getPlayerEntityByUUID(uuid);
             IPokemob evo = evt.mob;
             proxy.setPokemob(player, evo);
             evt.setCanceled(true);
             if (!player.getEntityWorld().isRemote)
             {
-                EntityPlayerMP playerMP = (EntityPlayerMP) player;
+                ServerPlayerEntity playerMP = (ServerPlayerEntity) player;
                 PacketTransform.sendPacket(player, playerMP);
                 if (!player.getEntityWorld().isRemote)
                 {
                     EventsHandler.sendUpdate(player);
-                    ((EntityPlayerMP) player).sendAllContents(player.inventoryContainer,
+                    ((ServerPlayerEntity) player).sendAllContents(player.inventoryContainer,
                             player.inventoryContainer.inventoryItemStacks);
                     // // Fixes the inventories appearing to vanish
-                    player.getEntityData().setLong("_pokeplayer_evolved_",
-                            player.getEntityWorld().getTotalWorldTime() + 50);
+                    player.getEntityData().putLong("_pokeplayer_evolved_",
+                            player.getEntityWorld().getGameTime() + 50);
                 }
             }
             return;
@@ -177,7 +177,7 @@ public class EventsHandler
     public void PlayerLoggedInEvent(PlayerLoggedInEvent event)
     {
         Side side = FMLCommonHandler.instance().getEffectiveSide();
-        if (side == Side.SERVER)
+        if (side == Dist.DEDICATED_SERVER)
         {
             syncSchedule.add(event.player.getUniqueID());
         }
@@ -192,16 +192,16 @@ public class EventsHandler
     @SubscribeEvent
     public void startTracking(StartTracking event)
     {
-        if (event.getTarget() instanceof EntityPlayer && event.getEntityPlayer().isServerWorld())
+        if (event.getTarget() instanceof PlayerEntity && event.getPlayerEntity().isServerWorld())
         {
-            PacketTransform.sendPacket((EntityPlayer) event.getTarget(), (EntityPlayerMP) event.getEntityPlayer());
+            PacketTransform.sendPacket((PlayerEntity) event.getTarget(), (ServerPlayerEntity) event.getPlayerEntity());
         }
     }
 
     @SubscribeEvent
     public void postPlayerTick(PlayerTickEvent event)
     {
-        EntityPlayer player = event.player;
+        PlayerEntity player = event.player;
 
         if (event.phase == Phase.START)
         {
@@ -217,7 +217,7 @@ public class EventsHandler
     @SubscribeEvent
     public void onEntityCapabilityAttach(AttachCapabilitiesEvent<Entity> event)
     {
-        if (event.getObject() instanceof EntityPlayer)
+        if (event.getObject() instanceof PlayerEntity)
         {
             event.addCapability(DATACAP, new DataSyncWrapper());
         }
@@ -233,24 +233,24 @@ public class EventsHandler
             if (evo != null)
             {
                 UUID uuid = UUID.fromString(evt.getEntity().getEntityData().getString("playerID"));
-                EntityPlayer player = evt.getWorld().getPlayerEntityByUUID(uuid);
+                PlayerEntity player = evt.getWorld().getPlayerEntityByUUID(uuid);
                 proxy.setPokemob(player, evo);
                 evt.setCanceled(true);
                 if (!player.getEntityWorld().isRemote)
                 {
-                    PacketTransform.sendPacket(player, (EntityPlayerMP) player);
+                    PacketTransform.sendPacket(player, (ServerPlayerEntity) player);
                 }
                 return;
             }
         }
-        else if (evt.getEntity() instanceof EntityPlayerMP)
+        else if (evt.getEntity() instanceof ServerPlayerEntity)
         {
-            sendUpdate((EntityPlayer) evt.getEntity());
+            sendUpdate((PlayerEntity) evt.getEntity());
         }
     }
 
-    public static void sendUpdate(EntityPlayer player)
+    public static void sendUpdate(PlayerEntity player)
     {
-        PacketTransform.sendPacket(player, (EntityPlayerMP) player);
+        PacketTransform.sendPacket(player, (ServerPlayerEntity) player);
     }
 }

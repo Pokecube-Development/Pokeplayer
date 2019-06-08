@@ -6,10 +6,10 @@ import net.minecraft.block.PressurePlateBlock.Sensitivity;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import pokecube.pokeplayer.tileentity.TileEntityTransformer;
@@ -29,8 +29,8 @@ public class BlockTransformer extends BlockPressurePlate implements ITileEntityP
     }
 
     @Override
-    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
-            EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
+    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, PlayerEntity playerIn,
+            Hand hand, Direction side, float hitX, float hitY, float hitZ)
     {
         TileEntity tile = worldIn.getTileEntity(pos);
         if (tile instanceof TileEntityTransformer)
@@ -45,9 +45,9 @@ public class BlockTransformer extends BlockPressurePlate implements ITileEntityP
     public void onEntityCollidedWithBlock(World worldIn, BlockPos pos, IBlockState state, Entity entityIn)
     {
         TileEntity tile = worldIn.getTileEntity(pos);
-        if (tile instanceof TileEntityTransformer && entityIn instanceof EntityPlayer)
+        if (tile instanceof TileEntityTransformer && entityIn instanceof PlayerEntity)
         {
-            ((TileEntityTransformer) tile).onStepped((EntityPlayer) entityIn);
+            ((TileEntityTransformer) tile).onStepped((PlayerEntity) entityIn);
         }
         super.onEntityCollidedWithBlock(worldIn, pos, state, entityIn);
     }

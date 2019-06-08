@@ -3,8 +3,8 @@ package pokecube.pokeplayer.client.gui;
 import java.util.UUID;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import pokecube.core.PokecubeCore;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.client.gui.GuiTeleport;
@@ -54,7 +54,7 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
             return;
         }
         if (pokemob.getAttackCooldown() > 0) return;
-        EntityPlayer player = minecraft.player;
+        PlayerEntity player = minecraft.player;
         Entity target = Tools.getPointedEntity(player, 32);
         Vector3 targetLocation = Tools.getPointedLocation(player, 32);
         boolean sameOwner = false;
@@ -78,7 +78,7 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
                 return;
             }
         }
-        if (target != null && !sameOwner && target instanceof EntityLivingBase)
+        if (target != null && !sameOwner && target instanceof LivingEntity)
         {
             PacketCommand.sendCommand(pokemob, Command.ATTACKENTITY, new AttackEntityHandler(target.getEntityId()));
         }

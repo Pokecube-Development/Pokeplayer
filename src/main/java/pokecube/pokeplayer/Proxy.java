@@ -2,7 +2,7 @@ package pokecube.pokeplayer;
 
 import java.util.logging.Level;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.IGuiHandler;
@@ -13,18 +13,18 @@ import thut.core.common.handlers.PlayerDataHandler;
 
 public class Proxy implements IGuiHandler
 {
-    public void setPokemob(EntityPlayer player, IPokemob pokemob)
+    public void setPokemob(PlayerEntity player, IPokemob pokemob)
     {
         setMapping(player, pokemob);
     }
 
-    public void savePokemob(EntityPlayer player)
+    public void savePokemob(PlayerEntity player)
     {
         PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         if (info != null) info.save(player);
     }
 
-    private void setMapping(EntityPlayer player, IPokemob pokemob)
+    private void setMapping(PlayerEntity player, IPokemob pokemob)
     {
         PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         info.set(pokemob, player);
@@ -36,14 +36,14 @@ public class Proxy implements IGuiHandler
         }
     }
 
-    public IPokemob getPokemob(EntityPlayer player)
+    public IPokemob getPokemob(PlayerEntity player)
     {
         if (player == null || player.getUniqueID() == null) return null;
         PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         return info.getPokemob(player.getEntityWorld());
     }
 
-    public void updateInfo(EntityPlayer player)
+    public void updateInfo(PlayerEntity player)
     {
         PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         try
@@ -67,13 +67,13 @@ public class Proxy implements IGuiHandler
     }
 
     @Override
-    public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
+    public Object getServerGuiElement(int ID, PlayerEntity player, World world, int x, int y, int z)
     {
         return null;
     }
 
     @Override
-    public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
+    public Object getClientGuiElement(int ID, PlayerEntity player, World world, int x, int y, int z)
     {
         return null;
     }

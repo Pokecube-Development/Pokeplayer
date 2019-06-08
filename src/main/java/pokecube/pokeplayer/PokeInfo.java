@@ -2,12 +2,12 @@ package pokecube.pokeplayer;
 
 import java.util.function.Predicate;
 
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
@@ -49,7 +49,7 @@ public class PokeInfo extends PlayerData
     {
     }
 
-    public void set(IPokemob pokemob, EntityPlayer player)
+    public void set(IPokemob pokemob, PlayerEntity player)
     {
         if (this.pokemob != null || pokemob == null) resetPlayer(player);
         if (pokemob == null || this.pokemob == pokemob) return;
@@ -59,9 +59,9 @@ public class PokeInfo extends PlayerData
         this.originalWidth = player.width;
         this.originalHP = player.getMaxHealth();
         pokemob.getEntity().setWorld(player.getEntityWorld());
-        pokemob.getEntity().getEntityData().setBoolean("isPlayer", true);
-        pokemob.getEntity().getEntityData().setString("playerID", player.getUniqueID().toString());
-        pokemob.getEntity().getEntityData().setString("oldName", pokemob.getPokemonNickname());
+        pokemob.getEntity().getEntityData().putBoolean("isPlayer", true);
+        pokemob.getEntity().getEntityData().putString("playerID", player.getUniqueID().toString());
+        pokemob.getEntity().getEntityData().putString("oldName", pokemob.getPokemonNickname());
         pokemob.setPokemonNickname(player.getDisplayNameString());
         pokemob.setPokemonOwner(player);
         pokemob.initAI();
@@ -78,7 +78,7 @@ public class PokeInfo extends PlayerData
         save(player);
     }
 
-    public void resetPlayer(EntityPlayer player)
+    public void resetPlayer(PlayerEntity player)
     {
         DataSync sync = SyncHandler.getData(player);
         if (sync instanceof DataSyncWrapper)
@@ -107,7 +107,7 @@ public class PokeInfo extends PlayerData
         }
     }
 
-    public void setPlayer(EntityPlayer player)
+    public void setPlayer(PlayerEntity player)
     {
         if (pokemob == null) return;
         DataSync sync = SyncHandler.getData(player);
@@ -143,17 +143,17 @@ public class PokeInfo extends PlayerData
         if (!player.getEntityWorld().isRemote)
         {
             EventsHandler.sendUpdate(player);
-            ((EntityPlayerMP) player).sendAllContents(player.inventoryContainer,
+            ((ServerPlayerEntity) player).sendAllContents(player.inventoryContainer,
                     player.inventoryContainer.inventoryItemStacks);
             // // Fixes the inventories appearing to vanish
-            player.getEntityData().setLong("_pokeplayer_evolved_", player.getEntityWorld().getTotalWorldTime() + 50);
+            player.getEntityData().putLong("_pokeplayer_evolved_", player.getEntityWorld().getGameTime() + 50);
         }
     }
 
-    /** This fixes EntityPlayer.updateSize() resetting the size.
+    /** This fixes PlayerEntity.updateSize() resetting the size.
      * 
      * @param player */
-    public void postPlayerTick(EntityPlayer player)
+    public void postPlayerTick(PlayerEntity player)
     {
         if (pokemob == null) return;
         float height = pokemob.getSize() * pokemob.getPokedexEntry().height;
@@ -168,14 +168,14 @@ public class PokeInfo extends PlayerData
         }
     }
 
-    public void onUpdate(EntityPlayer player)
+    public void onUpdate(PlayerEntity player)
     {
         if (getPokemob(player.getEntityWorld()) == null && stack != null)
         {
             resetPlayer(player);
         }
         if (pokemob == null) return;
-        EntityLiving poke = pokemob.getEntity();
+        MobEntity poke = pokemob.getEntity();
 
         // Fixes pokemob sometimes targetting self.
         if (poke.getAttackTarget() == player || poke.getAttackTarget() == poke)
@@ -221,7 +221,7 @@ public class PokeInfo extends PlayerData
 
         float health = poke.getHealth();
         /** do not manage hp for creative mode players. */
-        if (!player.capabilities.isCreativeMode) if (player instanceof EntityPlayerMP && player.addedToChunk)
+        if (!player.capabilities.isCreativeMode) if (player instanceof ServerPlayerEntity && player.addedToChunk)
         {
             float playerHealth = player.getHealth();
 
@@ -253,19 +253,19 @@ public class PokeInfo extends PlayerData
 
             PacketTransform packet = new PacketTransform();
             packet.id = player.getEntityId();
-            packet.data.setBoolean("U", true);
-            packet.data.setFloat("H", health);
-            packet.data.setFloat("M", poke.getMaxHealth());
-            PokecubeMod.packetPipeline.sendTo(packet, (EntityPlayerMP) player);
+            packet.data.putBoolean("U", true);
+            packet.data.putFloat("H", health);
+            packet.data.putFloat("M", poke.getMaxHealth());
+            PokecubeMod.packetPipeline.sendTo(packet, (ServerPlayerEntity) player);
 
             // Fixes the inventories appearing to vanish
             if (player.getEntityData().hasKey("_pokeplayer_evolved_") && player.getEntityData()
-                    .getLong("_pokeplayer_evolved_") > player.getEntityWorld().getTotalWorldTime())
+                    .getLong("_pokeplayer_evolved_") > player.getEntityWorld().getGameTime())
             {
-                ((EntityPlayerMP) player).sendAllContents(player.inventoryContainer,
+                ((ServerPlayerEntity) player).sendAllContents(player.inventoryContainer,
                         player.inventoryContainer.inventoryItemStacks);
             }
-            else player.getEntityData().removeTag("_pokeplayer_evolved_");
+            else player.getEntityData().remove("_pokeplayer_evolved_");
         }
         if (player.getHealth() > 0) player.deathTime = -1;
         poke.deathTime = player.deathTime;
@@ -291,13 +291,13 @@ public class PokeInfo extends PlayerData
         stack = null;
     }
 
-    public void save(EntityPlayer player)
+    public void save(PlayerEntity player)
     {
         if (!player.getEntityWorld().isRemote)
             PlayerDataHandler.getInstance().save(player.getCachedUniqueIdString(), getIdentifier());
     }
 
-    private void setFlying(EntityPlayer player, boolean set)
+    private void setFlying(PlayerEntity player, boolean set)
     {
         if (pokemob == null) return;
         boolean fly = pokemob.floats() || pokemob.flys() || !set;
@@ -309,17 +309,17 @@ public class PokeInfo extends PlayerData
         }
     }
 
-    private void updateFlying(EntityPlayer player)
+    private void updateFlying(PlayerEntity player)
     {
         if (pokemob == null) return;
         if (pokemob.floats() || pokemob.flys())
         {
             player.fallDistance = 0;
-            if (player instanceof EntityPlayerMP) ((EntityPlayerMP) player).connection.floatingTickCount = 0;
+            if (player instanceof ServerPlayerEntity) ((ServerPlayerEntity) player).connection.floatingTickCount = 0;
         }
     }
 
-    private void updateFloating(EntityPlayer player)
+    private void updateFloating(PlayerEntity player)
     {
         if (pokemob == null) return;
         if (!player.isSneaking() && pokemob.floats() && !player.capabilities.isFlying)
@@ -346,7 +346,7 @@ public class PokeInfo extends PlayerData
         }
     }
 
-    private void updateSwimming(EntityPlayer player)
+    private void updateSwimming(PlayerEntity player)
     {
         if (pokemob == null) return;
         if (pokemob.getPokedexEntry().swims() || pokemob.isType(PokeType.getType("water"))) player.setAir(300);
@@ -371,7 +371,7 @@ public class PokeInfo extends PlayerData
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound tag)
+    public void writeToNBT(CompoundNBT tag)
     {
         if (pokemob != null)
         {
@@ -382,13 +382,13 @@ public class PokeInfo extends PlayerData
         {
             stack.writeToNBT(tag);
         }
-        tag.setFloat("h", originalHeight);
-        tag.setFloat("w", originalWidth);
-        tag.setFloat("hp", originalHP);
+        tag.putFloat("h", originalHeight);
+        tag.putFloat("w", originalWidth);
+        tag.putFloat("hp", originalHP);
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tag)
+    public void readFromNBT(CompoundNBT tag)
     {
         stack = new ItemStack(tag);
         originalHeight = tag.getFloat("h");

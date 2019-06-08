@@ -1,6 +1,6 @@
 package pokecube.pokeplayer.inventory;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 import pokecube.core.entity.pokemobs.AnimalChest;
 import pokecube.core.interfaces.IPokemob;
@@ -32,7 +32,7 @@ public class InventoryPlayerPokemob extends AnimalChest
         this.info = null;
     }
 
-    public void saveToPokemob(IPokemob pokemob, EntityPlayer player)
+    public void saveToPokemob(IPokemob pokemob, PlayerEntity player)
     {
         AnimalChest inventory = pokemob.getPokemobInventory();
         for (int i = 0; i < inventory.getSizeInventory(); i++)
@@ -55,12 +55,12 @@ public class InventoryPlayerPokemob extends AnimalChest
     }
 
     @Override
-    public void openInventory(EntityPlayer player)
+    public void openInventory(PlayerEntity player)
     {
     }
 
     @Override
-    public void closeInventory(EntityPlayer player)
+    public void closeInventory(PlayerEntity player)
     {
         if (player.getEntityWorld().isRemote) return;
         IPokemob e = PokePlayer.PROXY.getPokemob(player);

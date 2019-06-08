@@ -3,8 +3,8 @@ package pokecube.pokeplayer.network.handlers;
 import java.util.logging.Level;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import pokecube.core.events.pokemob.combat.CommandAttackEvent;
@@ -34,7 +34,7 @@ public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.comman
         // Actually execute the move if needed.
         World world = pokemob.getEntity().getEntityWorld();
         Entity target = PokecubeMod.core.getEntityProvider().getEntity(world, targetId, true);
-        if (target == null || !(target instanceof EntityLivingBase))
+        if (target == null || !(target instanceof LivingEntity))
         {
             if (PokecubeMod.debug)
             {
@@ -59,8 +59,8 @@ public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.comman
             }
             else
             {
-                pokemob.getEntity().setAttackTarget((EntityLivingBase) target);
-                if (target instanceof EntityLiving) ((EntityLiving) target).setAttackTarget(pokemob.getEntity());
+                pokemob.getEntity().setAttackTarget((LivingEntity) target);
+                if (target instanceof MobEntity) ((MobEntity) target).setAttackTarget(pokemob.getEntity());
                 IPokemob targ = CapabilityPokemob.getPokemobFor(target);
                 if (targ != null) targ.setCombatState(CombatStates.ANGRY, true);
                 // Checks if within range

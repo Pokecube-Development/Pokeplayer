@@ -7,10 +7,10 @@ import com.google.common.collect.Lists;
 
 import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.WorldServer;
 import pokecube.core.blocks.TileEntityOwnable;
 import pokecube.core.database.Database;
@@ -40,7 +40,7 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
         return stack;
     }
 
-    public void onInteract(EntityPlayer player)
+    public void onInteract(PlayerEntity player)
     {
         if (getWorld().isRemote || random) return;
         if (canEdit(player) || pubby)
@@ -58,7 +58,7 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
         }
     }
 
-    public void onStepped(EntityPlayer player)
+    public void onStepped(PlayerEntity player)
     {
         if (getWorld().isRemote || stepTick > 0) return;
         PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
@@ -74,9 +74,9 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             }
             EventsHandler.sendUpdate(player);
             WorldServer world = (WorldServer) player.getEntityWorld();
-            for (EntityPlayer player2 : world.getEntityTracker().getTrackingPlayers(player))
+            for (PlayerEntity player2 : world.getEntityTracker().getTrackingPlayers(player))
             {
-                PacketTransform.sendPacket(player, (EntityPlayerMP) player2);
+                PacketTransform.sendPacket(player, (ServerPlayerEntity) player2);
             }
             return;
         }
@@ -84,11 +84,11 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
         {
             stepTick = 50;
             IPokemob poke = PokePlayer.PROXY.getPokemob(player);
-            NBTTagCompound tag = poke.getEntity().getEntityData();
+            CompoundNBT tag = poke.getEntity().getEntityData();
             poke.setPokemonNickname(tag.getString("oldName"));
-            tag.removeTag("oldName");
-            tag.removeTag("isPlayer");
-            tag.removeTag("playerID");
+            tag.remove("oldName");
+            tag.remove("isPlayer");
+            tag.remove("playerID");
             ItemStack pokemob = PokecubeManager.pokemobToItem(poke);
             if (player.capabilities.isFlying)
             {
@@ -99,9 +99,9 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             stack = pokemob;
             EventsHandler.sendUpdate(player);
             WorldServer world = (WorldServer) player.getEntityWorld();
-            for (EntityPlayer player2 : world.getEntityTracker().getTrackingPlayers(player))
+            for (PlayerEntity player2 : world.getEntityTracker().getTrackingPlayers(player))
             {
-                PacketTransform.sendPacket(player, (EntityPlayerMP) player2);
+                PacketTransform.sendPacket(player, (ServerPlayerEntity) player2);
             }
             return;
         }
@@ -109,20 +109,20 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
         {
             stepTick = 50;
             IPokemob poke = PokePlayer.PROXY.getPokemob(player);
-            NBTTagCompound tag = poke.getEntity().getEntityData();
+            CompoundNBT tag = poke.getEntity().getEntityData();
             poke.setPokemonNickname(tag.getString("oldName"));
-            tag.removeTag("oldName");
-            tag.removeTag("isPlayer");
-            tag.removeTag("playerID");
+            tag.remove("oldName");
+            tag.remove("isPlayer");
+            tag.remove("playerID");
             player.capabilities.isFlying = false;
             player.sendPlayerAbilities();
             PokePlayer.PROXY.setPokemob(player, null);
             stack = ItemStack.EMPTY;
             EventsHandler.sendUpdate(player);
             WorldServer world = (WorldServer) player.getEntityWorld();
-            for (EntityPlayer player2 : world.getEntityTracker().getTrackingPlayers(player))
+            for (PlayerEntity player2 : world.getEntityTracker().getTrackingPlayers(player))
             {
-                PacketTransform.sendPacket(player, (EntityPlayerMP) player2);
+                PacketTransform.sendPacket(player, (ServerPlayerEntity) player2);
             }
             return;
         }
@@ -156,12 +156,12 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tagCompound)
+    public void readFromNBT(CompoundNBT tagCompound)
     {
         super.readFromNBT(tagCompound);
         if (tagCompound.hasKey("stack"))
         {
-            NBTTagCompound tag = tagCompound.getCompoundTag("stack");
+            CompoundNBT tag = tagCompound.getCompound("stack");
             stack = new ItemStack(tag);
         }
         if (tagCompound.hasKey("nums")) nums = tagCompound.getIntArray("nums");
@@ -177,20 +177,20 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tagCompound)
+    public CompoundNBT writeToNBT(CompoundNBT tagCompound)
     {
         super.writeToNBT(tagCompound);
         if (CompatWrapper.isValid(stack))
         {
-            NBTTagCompound tag = new NBTTagCompound();
+            CompoundNBT tag = new CompoundNBT();
             stack.writeToNBT(tag);
             tagCompound.setTag("stack", tag);
         }
-        if (nums != null) tagCompound.setIntArray("nums", nums);
+        if (nums != null) tagCompound.putIntArray("nums", nums);
         tagCompound.setInteger("lvl", lvl);
         tagCompound.setInteger("stepTick", stepTick);
-        tagCompound.setBoolean("random", random);
-        tagCompound.setBoolean("public", pubby);
+        tagCompound.putBoolean("random", random);
+        tagCompound.putBoolean("public", pubby);
         return tagCompound;
     }
 
