@@ -165,8 +165,8 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             stack = new ItemStack(tag);
         }
         if (tagCompound.hasKey("nums")) nums = tagCompound.getIntArray("nums");
-        if (tagCompound.hasKey("lvl")) lvl = tagCompound.getInteger("lvl");
-        stepTick = tagCompound.getInteger("stepTick");
+        if (tagCompound.hasKey("lvl")) lvl = tagCompound.getInt("lvl");
+        stepTick = tagCompound.getInt("stepTick");
         random = tagCompound.getBoolean("random");
         pubby = tagCompound.getBoolean("public");
     }
