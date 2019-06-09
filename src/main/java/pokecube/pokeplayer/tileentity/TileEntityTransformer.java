@@ -11,7 +11,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.ServerWorld;
 import pokecube.core.blocks.TileEntityOwnable;
 import pokecube.core.database.Database;
 import pokecube.core.interfaces.IPokemob;
@@ -73,7 +73,7 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
                 stepTick = 50;
             }
             EventsHandler.sendUpdate(player);
-            WorldServer world = (WorldServer) player.getEntityWorld();
+            ServerWorld world = (ServerWorld) player.getEntityWorld();
             for (PlayerEntity player2 : world.getEntityTracker().getTrackingPlayers(player))
             {
                 PacketTransform.sendPacket(player, (ServerPlayerEntity) player2);
@@ -98,7 +98,7 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             PokePlayer.PROXY.setPokemob(player, null);
             stack = pokemob;
             EventsHandler.sendUpdate(player);
-            WorldServer world = (WorldServer) player.getEntityWorld();
+            ServerWorld world = (ServerWorld) player.getEntityWorld();
             for (PlayerEntity player2 : world.getEntityTracker().getTrackingPlayers(player))
             {
                 PacketTransform.sendPacket(player, (ServerPlayerEntity) player2);
@@ -119,7 +119,7 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             PokePlayer.PROXY.setPokemob(player, null);
             stack = ItemStack.EMPTY;
             EventsHandler.sendUpdate(player);
-            WorldServer world = (WorldServer) player.getEntityWorld();
+            ServerWorld world = (ServerWorld) player.getEntityWorld();
             for (PlayerEntity player2 : world.getEntityTracker().getTrackingPlayers(player))
             {
                 PacketTransform.sendPacket(player, (ServerPlayerEntity) player2);
@@ -187,8 +187,8 @@ public class TileEntityTransformer extends TileEntityOwnable implements ITickabl
             tagCompound.setTag("stack", tag);
         }
         if (nums != null) tagCompound.putIntArray("nums", nums);
-        tagCompound.setInteger("lvl", lvl);
-        tagCompound.setInteger("stepTick", stepTick);
+        tagCompound.putInt("lvl", lvl);
+        tagCompound.putInt("stepTick", stepTick);
         tagCompound.putBoolean("random", random);
         tagCompound.putBoolean("public", pubby);
         return tagCompound;
