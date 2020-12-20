@@ -1,26 +1,26 @@
 package pokecube.pokeplayer.inventory;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.Container;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.item.Items;
 import pokecube.core.PokecubeItems;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.pokeplayer.PokeInfo;
-import pokecube.pokeplayer.PokePlayer;
 import thut.core.common.handlers.PlayerDataHandler;
-import thut.lib.CompatWrapper;
 
 public class ContainerPokemob extends Container
 {
 	private IInventory	pokemobInv;
-	public ContainerPokemob(EntityPlayer player)
+	private PlayerEntity playerEntity;
+	public ContainerPokemob(ContainerType<?> type, int id)
 	{
-	    final IPokemob e = PokePlayer.PROXY.getPokemob(player);
+		super(type, id);
+		PlayerEntity player = playerEntity;
+	    final IPokemob e = PokeInfo.getPokemob(player);
 	    final IInventory pokeInv;
         PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         pokeInv = info.pokeInventory;
@@ -30,7 +30,7 @@ public class ContainerPokemob extends Container
 		pokeInv.openInventory(null);
 		int i = (b0 - 4) * 18;
 		int slot = 0;
-		this.addSlotToContainer(new Slot(pokeInv, slot++, 8, 18)
+		this.addSlot(new Slot(pokeInv, slot++, 8, 18)
 		{
 			/** Check if the stack is a valid item for this slot. Always true
 			 * beside for the armor slots. */
@@ -40,7 +40,7 @@ public class ContainerPokemob extends Container
 				return super.isItemValid(stack) && stack.getItem() == Items.SADDLE && !this.getHasStack();
 			}
 		});
-		this.addSlotToContainer(new Slot(pokeInv, slot++, 8, 36)
+		this.addSlot(new Slot(pokeInv, slot++, 8, 36)
 		{
             
             /** Returns the maximum stack size for a given slot (usually the
@@ -61,13 +61,13 @@ public class ContainerPokemob extends Container
 			}
 		    
             @Override
-            public ItemStack onTake(EntityPlayer playerIn, ItemStack stack)
+            public ItemStack onTake(PlayerEntity playerIn, ItemStack stack)
             {
                 ItemStack old = getStack();
-                if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER)
-                {
+//                if(FMLCommonHandler.instance().getEffectiveSide() == Dist.DEDICATED_SERVER)
+//                {
                     e.getPokedexEntry().onHeldItemChange(stack, old, e);
-                }
+//                }
                 return super.onTake(playerIn, stack);
             }
 
@@ -78,10 +78,10 @@ public class ContainerPokemob extends Container
             public void putStack(ItemStack stack)
             {
                 super.putStack(stack);
-                if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER)
-                {
+//                if(FMLCommonHandler.instance().getEffectiveSide() == Dist.DEDICATED_SERVER)
+//                {
                     e.setHeldItem(stack);
-                }
+//                }
             }
 		});
 		int j;
@@ -91,14 +91,14 @@ public class ContainerPokemob extends Container
 		{
 			for (k = 0; k < 5; ++k)
 			{
-				this.addSlotToContainer(new Slot(pokeInv, slot++, 80 + k * 18, 18 + j * 18)
+				this.addSlot(new Slot(pokeInv, slot++, 80 + k * 18, 18 + j * 18)
 				{
 					/** Check if the stack is a valid item for this slot. Always
 					 * true beside for the armor slots. */
 					@Override
 					public boolean isItemValid(ItemStack stack)
 					{
-						return true;//PokecubeItems.isValidHeldItem(stack);
+						return PokecubeItems.isValidHeldItem(stack);
 					}
 				});
 			}
@@ -106,27 +106,27 @@ public class ContainerPokemob extends Container
 		slot = 0;
         for (j = 0; j < 9; ++j)
         {
-            this.addSlotToContainer(new Slot(playerInv, slot++, 8 + j * 18, 160 + i));
+            this.addSlot(new Slot(playerInv, slot++, 8 + j * 18, 160 + i));
         }
 
 		for (j = 0; j < 3; ++j)
 		{
 			for (k = 0; k < 9; ++k)
 			{
-				this.addSlotToContainer(new Slot(playerInv, slot++, 8 + k * 18, 102 + j * 18 + i));
+				this.addSlot(new Slot(playerInv, slot++, 8 + k * 18, 102 + j * 18 + i));
 			}
 		}
 	}
 
 	@Override
-	public boolean canInteractWith(EntityPlayer player)
+	public boolean canInteractWith(PlayerEntity player)
 	{
 		return true;
 	}
 
 	/** Called when the container is closed. */
 	@Override
-	public void onContainerClosed(EntityPlayer player)
+	public void onContainerClosed(PlayerEntity player)
 	{
 		super.onContainerClosed(player);
 		this.pokemobInv.closeInventory(player);
@@ -135,7 +135,7 @@ public class ContainerPokemob extends Container
 	/** Called when a player shift-clicks on a slot. You must override this or
 	 * you will crash when someone does that. */
 	@Override
-	public ItemStack transferStackInSlot(EntityPlayer player, int slotId)
+	public ItemStack transferStackInSlot(PlayerEntity player, int slotId)
 	{
 		ItemStack itemstack = ItemStack.EMPTY;
 		Slot slot = this.inventorySlots.get(slotId);
@@ -152,7 +152,7 @@ public class ContainerPokemob extends Container
 			}
 			else if (this.getSlot(1).isItemValid(itemstack1) && !this.getSlot(1).getHasStack())
 			{
-			    this.getSlot(1).putStack(slot.getStack().splitStack(1));
+			    this.getSlot(1).putStack(slot.getStack().split(1));
 			}
 			else if (this.getSlot(0).isItemValid(itemstack1))
 			{
@@ -161,7 +161,7 @@ public class ContainerPokemob extends Container
 			else if (this.pokemobInv.getSizeInventory() <= 2
 					|| !this.mergeItemStack(itemstack1, 2, this.pokemobInv.getSizeInventory(), false)) { return ItemStack.EMPTY; }
 
-            if (!CompatWrapper.isValid(itemstack1))
+            if (!itemstack1.isEmpty())
 			{
 				slot.putStack(ItemStack.EMPTY);
 			}

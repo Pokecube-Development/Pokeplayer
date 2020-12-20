@@ -1,120 +1,118 @@
 package pokecube.pokeplayer.network;
 
-import java.io.IOException;
-
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import pokecube.core.PokecubeCore;
 import pokecube.core.interfaces.IPokemob;
-import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.pokemob.IHasCommands.Command;
 import pokecube.core.interfaces.pokemob.ai.LogicStates;
 import pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler;
 import pokecube.core.network.pokemobs.PacketCommand;
 import pokecube.pokeplayer.PokeInfo;
 import thut.core.common.handlers.PlayerDataHandler;
+import thut.core.common.network.NBTPacket;
+import thut.core.common.network.PacketAssembly;
 
-public class PacketTransform implements IMessage, IMessageHandler<PacketTransform, IMessage>
+public class PacketTransform extends NBTPacket
 {
-    public NBTTagCompound data = new NBTTagCompound();
     public int            id;
+    
+    public static final PacketAssembly<PacketTransform> ASSEMBLY = PacketAssembly.registerAssembler(
+    		PacketTransform.class, PacketTransform::new, PokecubeCore.packets);
 
-    public static void sendPacket(EntityPlayer toSend, EntityPlayerMP sendTo)
+    public static void sendPacket(PlayerEntity toSend, ServerPlayerEntity sendTo)
     {
-        PokecubeMod.packetPipeline.sendTo(getPacket(toSend), sendTo);
+    	PacketTransform.ASSEMBLY.sendTo(getPacket(toSend), sendTo);
     }
 
-    public static PacketTransform getPacket(EntityPlayer toSend)
+    public static PacketTransform getPacket(PlayerEntity toSend)
     {
         PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(toSend).getData(PokeInfo.class);
         PacketTransform message = new PacketTransform();
-        info.writeToNBT(message.data);
+        info.writeToNBT(message.getTag());
         message.id = toSend.getEntityId();
         return message;
     }
 
-    public PacketTransform()
-    {
-    }
+//    @Override
+//    public IMessage onMessage(final PacketTransform message, final MessageContext ctx)
+//    {
+//        PokecubeCore.proxy.getMainThreadListener().addScheduledTask(new Runnable()
+//        {
+//            @Override
+//            public void run()
+//            {
+//                apply(message, ctx);
+//            }
+//        });
+//        return null;
+//    }
 
+//    public void fromBytes(ByteBuf buf) throws IOException
+//    {
+//        id = buf.readInt();
+//        new PacketBuffer(buf).readCompoundTag();
+//    }
+//
+//
+//    public void toBytes(ByteBuf buf)
+//    {
+//        buf.writeInt(id);
+//        new PacketBuffer(buf).writeCompoundTag(this.getTag());
+//    }
+
+    public PacketTransform() {
+    	super();
+    }
+    
+    public PacketTransform(final CompoundNBT tag) {
+    	super();
+    	this.tag = tag;
+    }
+    
+    public PacketTransform(final PacketBuffer buffer) {
+    	super(buffer);
+    }
+    
     @Override
-    public IMessage onMessage(final PacketTransform message, final MessageContext ctx)
-    {
-        PokecubeCore.proxy.getMainThreadListener().addScheduledTask(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                apply(message, ctx);
-            }
-        });
-        return null;
-    }
-
-    @Override
-    public void fromBytes(ByteBuf buf)
-    {
-        id = buf.readInt();
-        try
-        {
-            data = new PacketBuffer(buf).readCompoundTag();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void toBytes(ByteBuf buf)
-    {
-        buf.writeInt(id);
-        new PacketBuffer(buf).writeCompoundTag(data);
-    }
-
-    static void apply(PacketTransform message, MessageContext ctx)
+    protected void onCompleteClient()
     {
         World world = PokecubeCore.proxy.getWorld();
-        Entity e = PokecubeMod.core.getEntityProvider().getEntity(world, message.id, false);
-        if (message.data.hasKey("U"))
+        Entity e = PokecubeCore.getEntityProvider().getEntity(world, this.id, false);
+        if (this.getTag().contains("U"))
         {
-            EntityPlayer player = PokecubeCore.proxy.getPlayer((String) null);
-            if (message.data.hasKey("H"))
+            PlayerEntity player = PokecubeCore.proxy.getPlayer();
+            if (this.getTag().contains("H"))
             {
                 PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                 IPokemob pokemob = info.getPokemob(world);
                 if (pokemob == null) { return; }
-                float health = message.data.getFloat("H");
+                float health = this.getTag().getFloat("H");
                 if (pokemob.getEntity() == null) return;
-                float max = message.data.getFloat("M");
-                pokemob.getEntity().getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(max);
+                //float max = message.getTag().getFloat("M");
+                //pokemob.getEntity().getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(max);
                 pokemob.setHealth(health);
                 player.setHealth(health);
             }
-            else if (message.data.hasKey("S"))
+            else if (this.getTag().contains("S"))
             {
                 PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                 IPokemob pokemob = info.getPokemob(world);
                 if (pokemob == null) { return; }
-                pokemob.setLogicState(LogicStates.SITTING, message.data.getBoolean("S"));
+                pokemob.setLogicState(LogicStates.SITTING, this.getTag().getBoolean("S"));
             }
             return;
         }
-        if (e instanceof EntityPlayer)
+        if (e instanceof PlayerEntity)
         {
-            EntityPlayer player = (EntityPlayer) e;
+            PlayerEntity player = (PlayerEntity) e;
             PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
             info.clear();
-            info.readFromNBT(message.data);
+            info.readFromNBT(this.getTag());
             IPokemob pokemob = info.getPokemob(world);
             if (pokemob != null)
             {
@@ -129,5 +127,4 @@ public class PacketTransform implements IMessage, IMessageHandler<PacketTransfor
             }
         }
     }
-
 }

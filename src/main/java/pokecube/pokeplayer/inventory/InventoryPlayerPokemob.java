@@ -1,11 +1,11 @@
 package pokecube.pokeplayer.inventory;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.world.World;
 import pokecube.core.entity.pokemobs.AnimalChest;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.pokeplayer.PokeInfo;
-import pokecube.pokeplayer.PokePlayer;
 
 public class InventoryPlayerPokemob extends AnimalChest
 {
@@ -13,18 +13,17 @@ public class InventoryPlayerPokemob extends AnimalChest
 
     public InventoryPlayerPokemob(PokeInfo info, World world)
     {
-        super(info.getPokemob(world).getPokemobInventory().getName(),
-                info.getPokemob(world).getPokemobInventory().getSizeInventory());
-        for (int i = 0; i < info.getPokemob(world).getPokemobInventory().getSizeInventory(); i++)
+        super();
+        for (int i = 0; i < info.getPokemob(world).getInventory().getSizeInventory(); i++)
         {
-            this.setInventorySlotContents(i, info.getPokemob(world).getPokemobInventory().getStackInSlot(i));
+            this.setInventorySlotContents(i, info.getPokemob(world).getInventory().getStackInSlot(i));
         }
         this.info = info;
     }
 
     public InventoryPlayerPokemob(AnimalChest inventory)
     {
-        super(inventory.getName(), inventory.getSizeInventory());
+        super();
         for (int i = 0; i < inventory.getSizeInventory(); i++)
         {
             this.setInventorySlotContents(i, inventory.getStackInSlot(i));
@@ -32,9 +31,9 @@ public class InventoryPlayerPokemob extends AnimalChest
         this.info = null;
     }
 
-    public void saveToPokemob(IPokemob pokemob, EntityPlayer player)
+    public void saveToPokemob(IPokemob pokemob, PlayerEntity player)
     {
-        AnimalChest inventory = pokemob.getPokemobInventory();
+        IInventory inventory = pokemob.getInventory();
         for (int i = 0; i < inventory.getSizeInventory(); i++)
         {
             inventory.setInventorySlotContents(i, this.getStackInSlot(i));
@@ -47,7 +46,7 @@ public class InventoryPlayerPokemob extends AnimalChest
 
     public void syncFromPokemob(IPokemob pokemob)
     {
-        AnimalChest inventory = pokemob.getPokemobInventory();
+        IInventory inventory = pokemob.getInventory();
         for (int i = 0; i < inventory.getSizeInventory(); i++)
         {
             this.setInventorySlotContents(i, inventory.getStackInSlot(i));
@@ -55,15 +54,15 @@ public class InventoryPlayerPokemob extends AnimalChest
     }
 
     @Override
-    public void openInventory(EntityPlayer player)
+    public void openInventory(PlayerEntity player)
     {
     }
 
     @Override
-    public void closeInventory(EntityPlayer player)
+    public void closeInventory(PlayerEntity player)
     {
         if (player.getEntityWorld().isRemote) return;
-        IPokemob e = PokePlayer.PROXY.getPokemob(player);
+        IPokemob e = PokeInfo.getPokemob(player);
         saveToPokemob(e, player);
     }
 }

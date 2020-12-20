@@ -1,22 +1,65 @@
 buildscript {
     repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
         jcenter()
-        maven {
-            name = "Forge"
-            url = "http://files.minecraftforge.net/maven"
+        mavenCentral()
+        flatDir {
+          dirs 'libs'
         }
-        maven {
-            name = "Sonatype"
-            url = 'https://oss.sonatype.org/content/groups/public'
-        }
+        maven {url='https://dist.creeper.host/Sponge/maven'}
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
-plugins {
-    id 'com.matthewprenger.cursegradle' version '1.0.9'
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+ext {
+    VERSION_COMPILE = "${version_compile}"
+    // Force a refresh of the toml file
+    cleanTOML()
+}
+
+version = "${version_minecraft}-${VERSION_COMPILE}"
+group = 'thut'
+archivesBaseName = "${compile_name}"
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+minecraft {
+    mappings channel: 'snapshot', version: "${version_mappings}"
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    
+    runs {
+        client = {
+            // recommended logging level for the console
+            properties 'forge.logging.console.level': 'debug'
+            properties '-XX': '+UnlockCommercialFeatures'
+            properties '-XX': '+FlightRecorder'
+            properties 'forge.logging.console.level': 'debug'
+            workingDirectory project.file('run').canonicalPath
+            source sourceSets.main
+        }
+        server = {
+            // recommended logging level for the console
+            properties 'forge.logging.console.level': 'debug'
+            properties '-XX': '+UnlockCommercialFeatures'
+            properties '-XX': '+FlightRecorder'
+            workingDirectory project.file('run').canonicalPath
+            source sourceSets.main
+        }
+        data = {
+            workingDirectory project.file('run').canonicalPath
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            args '--mod', 'pokeplayer', '--all', '--output', file('src/generated/resources/'), '--existing', sourceSets.main.resources.srcDirs[0]
+            source sourceSets.main
+        }
+    }
 }
 
 repositories {
@@ -24,88 +67,48 @@ repositories {
         name = "CurseForge"
         url = "https://minecraft.curseforge.com/api/maven/"
     }
-}
-
-apply plugin: 'net.minecraftforge.gradle.forge'
-//Only edit below this line, the above code adds and enables the nessasary things for Forge to be setup.
-
-
-version = "${version_minecraft}-${version_compile}"
-group= ""
-archivesBaseName = "${compile_name}"
-
-repositories {
-    maven {
-        //JEI files
-        url = "http://dvs1.progwml6.com/files/maven"
-    }
-    maven {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-        url = "http://modmaven.k-4u.nl"
+    flatDir {
+        dirs 'libs'
     }
 }
 
 dependencies {
-    //Thut Core
-    deobfCompile "thutcore:thutcore:${version_minecraft}:${version_thutcore}"
-    //Thut Wearables
-    deobfCompile "thut-wearables:thut-wearables:release:deobf"
-    //Open Computers API
-    deobfCompile "li.cil.oc:OpenComputers:MC1.12.+:api"
+    minecraft "net.minecraftforge:forge:${version_minecraft}-${version_forge}"
+
+    // The below line can be uncommented and adjusted if you provide the jar via /libs
+    // implementation "libs:pokecube-aio-1.16.4-3.1.2-deobf"
     
-    //Pokecube Core
-    deobfCompile "pokecube-core:pokecube-core:release:deobf"
-    //Pokecube Revival
-    deobfCompile "pokecube-revival:pokecube-revival:release:deobf"
-    //Pokecube Mobs
-    deobfCompile "pokecube-mobs:pokecube-mobs:release:deobf"
+    // If the above line is uncommented, the below should be commented out.
+    implementation "pokecube-aoi:pokecube-aio:release:deobf"
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-minecraft {
-    version = "${version_long}"
-    runDir = "run"
-    mappings = "${version_mappings}"
-    useDepAts = true
-    
-    replace "@VERSION@", project.version_compile
-    replaceIn "Reference.java"
-}
-
-task deobfJar(type: Jar) {
-    from sourceSets.main.output
-    classifier = 'deobf'
-}
-
-artifacts {
-    archives deobfJar
-}
-
+// Example for how to get properties into the manifest for reading by the runtime..
 jar {
     manifest {
-        attributes "FMLAT": "${at_file}"
-    }   
+        attributes([
+            "FMLAT": "accesstransformer.cfg",
+            "Specification-Title": "${compile_name}",
+            "Specification-Vendor": "${author_name}",
+            "Specification-Version": VERSION_COMPILE,
+            "Implementation-Title": project.name,
+            "Implementation-Version": VERSION_COMPILE,
+            "Implementation-Vendor" :"${author_name}",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
 }
 
-processResources
-{
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+processResources.doLast {
+    def TOMLFILE = "./build/resources/main/META-INF/mods.toml"
+    replaceParameters(TOMLFILE, "version_pc", "${version_pcsupport}")
+    replaceParameters(TOMLFILE, "version_mc", "${version_mcsupport}")
+}
 
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
-    }
-        
-    // copy everything else, thats not the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
+def replaceParameters(filename, find, replace) {
+    ant.replace(file:filename,token:find,value:replace)
+}
+
+def cleanTOML()
+{
+    delete "./build/resources/main/META-INF/mods.toml" 
 }

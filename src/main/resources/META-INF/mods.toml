@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[31,)"
+issueTrackerURL="https://github.com/Pokecube-Development/Pokeplayer/issues"
+license="All rights reserved"
+
+[[mods]]
+    modId="pokecube_pokeplayer"
+    version="${file.jarVersion}"
+    displayName="Pokécube Mystery Dungeon"
+    authors="NelkGames, Thutmose"
+    description='''
+    Pokémon Mystery Dungeon mechanics for Pokécube..
+    '''
+    
+[[dependencies.pokecube_pokeplayer]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="version_mc"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.pokecube_pokeplayer]]
+    modId="pokecube"
+    mandatory=true
+    versionRange="version_pokecube"
+    ordering="NONE"
+    side="BOTH"

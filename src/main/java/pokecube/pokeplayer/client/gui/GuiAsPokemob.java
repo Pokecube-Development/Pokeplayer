@@ -1,11 +1,9 @@
 package pokecube.pokeplayer.client.gui;
 
-import java.util.UUID;
-
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import pokecube.core.PokecubeCore;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.client.gui.GuiTeleport;
 import pokecube.core.interfaces.IMoveNames;
@@ -18,8 +16,9 @@ import pokecube.core.interfaces.pokemob.commandhandlers.AttackNothingHandler;
 import pokecube.core.interfaces.pokemob.commandhandlers.TeleportHandler;
 import pokecube.core.network.pokemobs.PacketCommand;
 import pokecube.core.utils.Tools;
-import pokecube.pokeplayer.PokePlayer;
+import pokecube.pokeplayer.PokeInfo;
 import thut.api.maths.Vector3;
+import thut.core.common.handlers.PlayerDataHandler;
 
 public class GuiAsPokemob extends GuiDisplayPokecubeInfo
 {
@@ -31,7 +30,9 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
     @Override
     public IPokemob[] getPokemobsToDisplay()
     {
-        IPokemob pokemob = PokePlayer.PROXY.getPokemob(PokecubeCore.proxy.getPlayer((UUID) null));
+        final PlayerEntity player = Minecraft.getInstance().player;
+        final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        final IPokemob pokemob = info.getPokemob(player.world);
         if (pokemob != null) return new IPokemob[] { pokemob };
         return super.getPokemobsToDisplay();
     }
@@ -39,7 +40,9 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
     @Override
     public IPokemob getCurrentPokemob()
     {
-        IPokemob pokemob = PokePlayer.PROXY.getPokemob(PokecubeCore.proxy.getPlayer((UUID) null));
+        final PlayerEntity player = Minecraft.getInstance().player;
+        final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        final IPokemob pokemob = info.getPokemob(player.world);
         if (pokemob != null) return pokemob;
         return super.getCurrentPokemob();
     }
@@ -47,25 +50,23 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
     @Override
     public void pokemobAttack()
     {
-        IPokemob pokemob = PokePlayer.PROXY.getPokemob(PokecubeCore.proxy.getPlayer((UUID) null));
+        final PlayerEntity player = Minecraft.getInstance().player;
+        final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        final IPokemob pokemob = info.getPokemob(player.world);
         if (pokemob == null)
         {
             super.pokemobAttack();
             return;
         }
         if (pokemob.getAttackCooldown() > 0) return;
-        EntityPlayer player = minecraft.player;
-        Entity target = Tools.getPointedEntity(player, 32);
-        Vector3 targetLocation = Tools.getPointedLocation(player, 32);
+        final Entity target = Tools.getPointedEntity(player, 32);
+        final Vector3 targetLocation = Tools.getPointedLocation(player, 32);
         boolean sameOwner = false;
-        IPokemob targetMob = CapabilityPokemob.getPokemobFor(target);
-        if (targetMob != null)
-        {
-            sameOwner = targetMob.getPokemonOwner() == player;
-        }
+        final IPokemob targetMob = CapabilityPokemob.getPokemobFor(target);
+        if (targetMob != null) sameOwner = targetMob.getOwner() == player;
         if (pokemob != null)
         {
-            if (pokemob.getMove(pokemob.getMoveIndex()) == null) { return; }
+            if (pokemob.getMove(pokemob.getMoveIndex()) == null) return;
             if (pokemob.getMove(pokemob.getMoveIndex()).equalsIgnoreCase(IMoveNames.MOVE_TELEPORT))
             {
                 if (!GuiTeleport.instance().getState())
@@ -78,18 +79,11 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
                 return;
             }
         }
-        if (target != null && !sameOwner && target instanceof EntityLivingBase)
-        {
-            PacketCommand.sendCommand(pokemob, Command.ATTACKENTITY, new AttackEntityHandler(target.getEntityId()));
-        }
-        else if (targetLocation != null)
-        {
-            PacketCommand.sendCommand(pokemob, Command.ATTACKLOCATION, new AttackLocationHandler(targetLocation));
-        }
-        else
-        {
-            PacketCommand.sendCommand(pokemob, Command.ATTACKNOTHING, new AttackNothingHandler());
-        }
+        if (target != null && !sameOwner && target instanceof LivingEntity) PacketCommand.sendCommand(pokemob,
+                Command.ATTACKENTITY, new AttackEntityHandler(target.getEntityId()));
+        else if (targetLocation != null) PacketCommand.sendCommand(pokemob, Command.ATTACKLOCATION,
+                new AttackLocationHandler(targetLocation));
+        else PacketCommand.sendCommand(pokemob, Command.ATTACKNOTHING, new AttackNothingHandler());
     }
 
     @Override
@@ -100,7 +94,9 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
 
     boolean isPokemob()
     {
-        IPokemob pokemob = PokePlayer.PROXY.getPokemob(PokecubeCore.proxy.getPlayer((UUID) null));
+    	final PlayerEntity player = Minecraft.getInstance().player;
+        final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+        final IPokemob pokemob = info.getPokemob(player.world);
         return pokemob != null;
     }
 }

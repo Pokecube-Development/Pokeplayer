@@ -3,20 +3,19 @@ package pokecube.pokeplayer.network.handlers;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.MinecraftForge;
 import pokecube.core.events.pokemob.combat.CommandAttackEvent;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.Move_Base;
 import pokecube.core.interfaces.pokemob.ai.CombatStates;
 import pokecube.core.moves.MovesUtils;
-import pokecube.core.network.pokemobs.PacketCommand.DefaultHandler;
 import thut.api.maths.Vector3;
 
 // Wrapper to ensure player attacks entity as pokeplayer
-public class AttackLocationHandler extends DefaultHandler
+public class AttackLocationHandler extends pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler
 {
-    Vector3 location;
+    //Vector3 location;
 
     public AttackLocationHandler()
     {
@@ -30,7 +29,7 @@ public class AttackLocationHandler extends DefaultHandler
     @Override
     public void handleCommand(IPokemob pokemob)
     {
-        if (pokemob.getEntity().getEntityData().getBoolean("isPlayer"))
+        if (pokemob.getEntity().getPersistentData().getBoolean("is_a_player"))
         {
             int currentMove = pokemob.getMoveIndex();
             CommandAttackEvent evt = new CommandAttackEvent(pokemob.getEntity(), null);
@@ -42,15 +41,15 @@ public class AttackLocationHandler extends DefaultHandler
                 pokemob.setCombatState(CombatStates.NOITEMUSE, false);
                 Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
                 // Send move use message first.
-                ITextComponent mess = new TextComponentTranslation("pokemob.action.usemove",
-                        pokemob.getPokemonDisplayName(),
-                        new TextComponentTranslation(MovesUtils.getUnlocalizedMove(move.getName())));
+                ITextComponent mess = new TranslationTextComponent("pokemob.action.usemove",
+                        pokemob.getDisplayName(),
+                        new TranslationTextComponent(MovesUtils.getUnlocalizedMove(move.getName())));
                 if (fromOwner()) pokemob.displayMessageToOwner(mess);
 
                 // If too hungry, send message about that.
                 if (pokemob.getHungerTime() > 0)
                 {
-                    mess = new TextComponentTranslation("pokemob.action.hungry", pokemob.getPokemonDisplayName());
+                    mess = new TranslationTextComponent("pokemob.action.hungry", pokemob.getDisplayName());
                     if (fromOwner()) pokemob.displayMessageToOwner(mess);
                     return;
                 }
@@ -70,7 +69,7 @@ public class AttackLocationHandler extends DefaultHandler
         }
     }
 
-    @Override
+    /*@Override
     public void writeToBuf(ByteBuf buf)
     {
         super.writeToBuf(buf);
@@ -82,5 +81,5 @@ public class AttackLocationHandler extends DefaultHandler
     {
         super.readFromBuf(buf);
         location = Vector3.readFromBuff(buf);
-    }
+    }*/
 }

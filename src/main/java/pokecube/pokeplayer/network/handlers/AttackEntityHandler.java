@@ -1,17 +1,16 @@
 package pokecube.pokeplayer.network.handlers;
 
-import java.util.logging.Level;
-
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import pokecube.core.PokecubeCore;
+import pokecube.core.ai.brain.BrainUtils;
 import pokecube.core.events.pokemob.combat.CommandAttackEvent;
 import pokecube.core.interfaces.IMoveConstants;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.Move_Base;
-import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.interfaces.pokemob.ai.CombatStates;
 import pokecube.core.moves.MovesUtils;
@@ -24,56 +23,40 @@ public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.comman
     public void handleCommand(IPokemob pokemob)
     {
         // Use default handling, which just agros stuff.
-        if (!pokemob.getEntity().getEntityData().getBoolean("isPlayer"))
+        if (!pokemob.getEntity().getPersistentData().getBoolean("is_a_player"))
         {
-            if (PokecubeMod.debug) PokecubeMod.log(Level.INFO, "Directing command to default AttackEntityHandler");
             super.handleCommand(pokemob);
             return;
         }
 
         // Actually execute the move if needed.
-        World world = pokemob.getEntity().getEntityWorld();
-        Entity target = PokecubeMod.core.getEntityProvider().getEntity(world, targetId, true);
-        if (target == null || !(target instanceof EntityLivingBase))
-        {
-            if (PokecubeMod.debug)
-            {
-                if (target == null) PokecubeMod.log(Level.WARNING, "Target Mob cannot be null!",
-                        new IllegalArgumentException(pokemob.getEntity().toString()));
-                else PokecubeMod.log(Level.WARNING, "Invalid Target!",
-                        new IllegalArgumentException(pokemob.getEntity() + " " + target));
-            }
-            return;
-        }
-        int currentMove = pokemob.getMoveIndex();
-        CommandAttackEvent event = new CommandAttackEvent(pokemob.getEntity(), target);
+        final World world = pokemob.getEntity().getEntityWorld();
+        final Entity target = PokecubeCore.getEntityProvider().getEntity(world, this.targetId, true);
+        final Entity real = PokecubeCore.getEntityProvider().getEntity(world, this.targetId, false);
+        if (target == null || !(target instanceof LivingEntity)) return;
+        final int currentMove = pokemob.getMoveIndex();
+        final CommandAttackEvent event = new CommandAttackEvent(pokemob.getEntity(), target);
         MinecraftForge.EVENT_BUS.post(event);
         if (!event.isCanceled() && currentMove != 5 && MovesUtils.canUseMove(pokemob))
         {
-            Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
+            final Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
             pokemob.setCombatState(CombatStates.EXECUTINGMOVE, false);
             pokemob.setCombatState(CombatStates.NOITEMUSE, false);
-            if (move.isSelfMove())
-            {
-                pokemob.executeMove(pokemob.getEntity(), null, 0);
-            }
+            if (move.isSelfMove()) pokemob.executeMove(pokemob.getEntity(), null, 0);
             else
             {
-                pokemob.getEntity().setAttackTarget((EntityLivingBase) target);
-                if (target instanceof EntityLiving) ((EntityLiving) target).setAttackTarget(pokemob.getEntity());
-                IPokemob targ = CapabilityPokemob.getPokemobFor(target);
+                pokemob.getEntity().setAttackTarget((LivingEntity) target);
+                if (target instanceof MobEntity) BrainUtils.initiateCombat((MobEntity) target, (LivingEntity) real);
+                ;
+                final IPokemob targ = CapabilityPokemob.getPokemobFor(target);
                 if (targ != null) targ.setCombatState(CombatStates.ANGRY, true);
                 // Checks if within range
-                float dist = target.getDistance(pokemob.getEntity());
-                double range = (move.getAttackCategory() & IMoveConstants.CATEGORY_DISTANCE) > 0
-                        ? PokecubeMod.core.getConfig().rangedAttackDistance
-                        : PokecubeMod.core.getConfig().contactAttackDistance;
+                final float dist = target.getDistance(pokemob.getEntity());
+                double range = (move.getAttackCategory() & IMoveConstants.CATEGORY_DISTANCE) > 0 ? PokecubeCore
+                        .getConfig().rangedAttackDistance : PokecubeCore.getConfig().contactAttackDistance;
                 range = Math.max(pokemob.getMobSizes().x, range);
                 range = Math.max(1, range);
-                if (dist < range)
-                {
-                    pokemob.executeMove(target, Vector3.getNewVector().set(target), dist);
-                }
+                if (dist < range) pokemob.executeMove(target, Vector3.getNewVector().set(target), dist);
             }
         }
     }

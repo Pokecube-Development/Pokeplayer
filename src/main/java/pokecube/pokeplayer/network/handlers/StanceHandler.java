@@ -2,23 +2,21 @@ package pokecube.pokeplayer.network.handlers;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
 import pokecube.core.PokecubeCore;
 import pokecube.core.interfaces.IPokemob;
-import pokecube.core.interfaces.PokecubeMod;
 import pokecube.core.interfaces.pokemob.ai.LogicStates;
-import pokecube.core.network.pokemobs.PacketCommand.DefaultHandler;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.network.PacketTransform;
 import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.world.mobs.data.PacketDataSync;
 
-public class StanceHandler extends DefaultHandler
+public class StanceHandler extends pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler
 {
     public static final byte BUTTONTOGGLESIT = 2;
     public static final byte SELFINTERACT    = -2;
@@ -40,44 +38,45 @@ public class StanceHandler extends DefaultHandler
     @Override
     public void handleCommand(IPokemob pokemob) throws Exception
     {
+    	super.handleCommand(pokemob);
         // Start by handling the default stance messages.
         pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler defaults = new pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler(
                 this.state, this.key);
         defaults.handleCommand(pokemob);
 
         // Handle pokeplayer specific things.
-        if (pokemob.getEntity().getEntityData().getBoolean("isPlayer"))
+        if (pokemob.getEntity().getPersistentData().getBoolean("is_a_player"))
         {
             Entity entity = pokemob.getEntity().getEntityWorld().getEntityByID(pokemob.getEntity().getEntityId());
-            if (entity instanceof EntityPlayer)
+            if (entity instanceof PlayerEntity)
             {
-                EntityPlayer player = (EntityPlayer) entity;
+                PlayerEntity player = (PlayerEntity) entity;
 
                 if (key == SELFINTERACT)
                 {
-                    EntityInteractSpecific evt = new EntityInteractSpecific(player, EnumHand.MAIN_HAND,
-                            pokemob.getEntity(), new Vec3d(0, 0, 0));
+                    EntityInteractSpecific evt = new EntityInteractSpecific(player, Hand.MAIN_HAND,
+                            pokemob.getEntity(), new Vector3d(0, 0, 0));
 
                     // Apply interaction, also do not allow saddle.
-                    ItemStack saddle = pokemob.getPokemobInventory().getStackInSlot(0);
-                    if (!saddle.isEmpty()) pokemob.getPokemobInventory().setInventorySlotContents(0, ItemStack.EMPTY);
-                    PokecubeCore.instance.events.interactEvent(evt);
-                    if (!saddle.isEmpty()) pokemob.getPokemobInventory().setInventorySlotContents(0, saddle);
+                    ItemStack saddle = pokemob.getInventory().getStackInSlot(0);
+                    if (!saddle.isEmpty()) pokemob.getInventory().setInventorySlotContents(0, ItemStack.EMPTY);
+                    PokecubeCore.MOVE_BUS.post(evt);
+                    if (!saddle.isEmpty()) pokemob.getInventory().setInventorySlotContents(0, saddle);
 
                     PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                     info.save(player);
                 }
                 else if (key == SYNCUPDATE)
                 {
-                    PacketDataSync.sync((EntityPlayerMP) player, pokemob.dataSync(), player.getEntityId(), true);
+                    PacketDataSync.sync((ServerPlayerEntity) player, pokemob.dataSync(), player.getEntityId(), true);
                 }
                 else if (key == BUTTONTOGGLESIT)
                 {
-                    PacketTransform packet = new PacketTransform();
+                	PacketTransform packet = new PacketTransform();
                     packet.id = player.getEntityId();
-                    packet.data.setBoolean("U", true);
-                    packet.data.setBoolean("S", pokemob.getLogicState(LogicStates.SITTING));
-                    PokecubeMod.packetPipeline.sendTo(packet, (EntityPlayerMP) player);
+                    packet.getTag().putBoolean("U", true);
+                    packet.getTag().putBoolean("S", pokemob.getLogicState(LogicStates.SITTING));
+                    PacketTransform.sendPacket(player, (ServerPlayerEntity) player);
                 }
             }
         }

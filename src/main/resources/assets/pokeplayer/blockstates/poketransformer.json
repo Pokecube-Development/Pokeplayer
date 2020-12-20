@@ -1,6 +1,0 @@
-{
-    "variants": {
-        "powered=false": { "model": "pokeplayer:poketransformer_up" },
-        "powered=true": { "model": "pokeplayer:poketransformer_down" }
-    }
-}
