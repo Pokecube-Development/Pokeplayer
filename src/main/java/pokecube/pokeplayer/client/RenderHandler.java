@@ -12,7 +12,7 @@ import pokecube.pokeplayer.PokeInfo;
 import thut.core.common.handlers.PlayerDataHandler;
 
 @EventBusSubscriber(value = Dist.CLIENT)
-public class RenderHandler 
+public class RenderHandler
 {
 	@SubscribeEvent
     public static void renderHand(final RenderHandEvent event)
@@ -21,7 +21,7 @@ public class RenderHandler
         final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
         if (info.getPokemob(player.world) != null) event.setCanceled(true);
     }
-	
+
 	@SubscribeEvent
     public static void renderPlayer(final RenderPlayerEvent.Pre event)
     {
@@ -30,12 +30,13 @@ public class RenderHandler
         if (info.getPokemob(player.world) == null) return;
         final LivingEntity entity = info.getPokemob(player.world).getEntity();
         final boolean backup = event.getRenderer().getRenderManager().info.isValid();
+        // EntityTools.copyEntityTransforms(entity, player);
         event.getRenderer().getRenderManager().setRenderShadow(false);
         event.getRenderer().getRenderManager().renderEntityStatic(
         		entity,
-        		0, 
-        		0, 
-        		0, 
+        		0,
+        		0,
+        		0,
         		0, event.getPartialRenderTick(), event.getMatrixStack(), event.getBuffers(), event.getLight());
         event.getRenderer().getRenderManager().setRenderShadow(backup);
         event.setCanceled(true);
