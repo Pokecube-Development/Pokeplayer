@@ -22,57 +22,54 @@ public class StanceHandler extends pokecube.core.interfaces.pokemob.commandhandl
     public static final byte SELFINTERACT    = -2;
     public static final byte SYNCUPDATE      = -3;
 
-    boolean                  state;
-    byte                     key;
+    boolean state;
+    byte    key;
 
     public StanceHandler()
     {
     }
 
-    public StanceHandler(Boolean state, Byte key)
+    public StanceHandler(final Boolean state, final Byte key)
     {
         this.state = state;
         this.key = key;
     }
 
     @Override
-    public void handleCommand(IPokemob pokemob) throws Exception
+    public void handleCommand(final IPokemob pokemob) throws Exception
     {
-    	super.handleCommand(pokemob);
+        super.handleCommand(pokemob);
         // Start by handling the default stance messages.
-        pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler defaults = new pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler(
+        final pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler defaults = new pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler(
                 this.state, this.key);
         defaults.handleCommand(pokemob);
 
         // Handle pokeplayer specific things.
         if (pokemob.getEntity().getPersistentData().getBoolean("is_a_player"))
         {
-            Entity entity = pokemob.getEntity().getEntityWorld().getEntityByID(pokemob.getEntity().getEntityId());
+            final Entity entity = pokemob.getEntity().getEntityWorld().getEntityByID(pokemob.getEntity().getEntityId());
             if (entity instanceof PlayerEntity)
             {
-                PlayerEntity player = (PlayerEntity) entity;
+                final PlayerEntity player = (PlayerEntity) entity;
 
-                if (key == SELFINTERACT)
+                if (this.key == StanceHandler.SELFINTERACT)
                 {
-                    EntityInteractSpecific evt = new EntityInteractSpecific(player, Hand.MAIN_HAND,
-                            pokemob.getEntity(), new Vector3d(0, 0, 0));
+                    final EntityInteractSpecific evt = new EntityInteractSpecific(player, Hand.MAIN_HAND, pokemob
+                            .getEntity(), new Vector3d(0, 0, 0));
 
                     // Apply interaction, also do not allow saddle.
-                    ItemStack saddle = pokemob.getInventory().getStackInSlot(0);
+                    final ItemStack saddle = pokemob.getInventory().getStackInSlot(0);
                     if (!saddle.isEmpty()) pokemob.getInventory().setInventorySlotContents(0, ItemStack.EMPTY);
                     PokecubeCore.MOVE_BUS.post(evt);
                     if (!saddle.isEmpty()) pokemob.getInventory().setInventorySlotContents(0, saddle);
 
-                    PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+                    final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                     info.save(player);
                 }
-                else if (key == SYNCUPDATE)
+                else if (this.key == StanceHandler.SYNCUPDATE) PacketDataSync.sync((ServerPlayerEntity) player, pokemob.dataSync(), player.getEntityId(), true);
+                else if (this.key == StanceHandler.BUTTONTOGGLESIT)
                 {
-                    PacketDataSync.sync((ServerPlayerEntity) player, pokemob.dataSync(), player.getEntityId(), true);
-                }
-                else if (key == BUTTONTOGGLESIT)
-                {
-                	PacketTransform packet = new PacketTransform();
+                    final PacketTransform packet = new PacketTransform();
                     packet.id = player.getEntityId();
                     packet.getTag().putBoolean("U", true);
                     packet.getTag().putBoolean("S", pokemob.getLogicState(LogicStates.SITTING));
@@ -83,19 +80,19 @@ public class StanceHandler extends pokecube.core.interfaces.pokemob.commandhandl
     }
 
     @Override
-    public void writeToBuf(ByteBuf buf)
+    public void writeToBuf(final ByteBuf buf)
     {
         super.writeToBuf(buf);
-        buf.writeBoolean(state);
-        buf.writeByte(key);
+        buf.writeBoolean(this.state);
+        buf.writeByte(this.key);
     }
 
     @Override
-    public void readFromBuf(ByteBuf buf)
+    public void readFromBuf(final ByteBuf buf)
     {
         super.readFromBuf(buf);
-        state = buf.readBoolean();
-        key = buf.readByte();
+        this.state = buf.readBoolean();
+        this.key = buf.readByte();
     }
 
 }
