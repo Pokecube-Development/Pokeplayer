@@ -32,7 +32,6 @@ import pokecube.core.items.pokecubes.PokecubeManager;
 import pokecube.core.utils.Tools;
 import pokecube.pokeplayer.EventsHandler;
 import pokecube.pokeplayer.PokeInfo;
-import pokecube.pokeplayer.Pokeplayer;
 import pokecube.pokeplayer.Reference;
 import pokecube.pokeplayer.block.PokeTransformContainer;
 import pokecube.pokeplayer.init.TileEntityInit;
@@ -227,28 +226,6 @@ public class TileEntityTransformer extends LockableLootTileEntity implements ICl
         return stack;
     }
 
-    public void onInteract(final PlayerEntity player)
-    {
-        if (this.getWorld().isRemote || this.random) return;
-        if (this.canEdit(player) || this.pubby) if (!this.items.get(0).isEmpty() && PokecubeManager.isFilled(player
-                .getHeldItemMainhand()))
-        {
-            this.getStack(player.getHeldItemMainhand());
-            player.inventory.setInventorySlotContents(player.inventory.currentItem, ItemStack.EMPTY);
-            Pokeplayer.LOGGER.debug("Slot");
-        }
-        else
-        {
-            Tools.giveItem(player, this.items.get(0));
-            this.items.get(0);
-        }
-    }
-
-    private boolean canEdit(final PlayerEntity player)
-    {
-        return player.isAllowEdit();
-    }
-
     public void onWalkedOn(final Entity entityIn)
     {
         if (this.getWorld().isRemote || this.stepTick-- > 0) return;
@@ -262,7 +239,7 @@ public class TileEntityTransformer extends LockableLootTileEntity implements ICl
         if (hasPokemob && !isPokemob)
         {
             final IPokemob pokemob = this.getPokemob();
-            if (pokemob != null)
+            if (pokemob != null &&  pokemob.getHealth() != 0)
             {
                 PokeInfo.setPokemob(player, pokemob);
                 this.items.set(0, ItemStack.EMPTY);
@@ -287,8 +264,9 @@ public class TileEntityTransformer extends LockableLootTileEntity implements ICl
             poke.setPokemonNickname(tag.getString("oldName"));
             PokecubeCore.LOGGER.debug("Converting {} back to a human", player.getDisplayName().getString());
             tag.remove("oldName");
-            tag.remove("is_a_Player");
+//            tag.remove("is_a_player");
             tag.remove("playerID");
+            info.detach();
             final ItemStack pokemob = PokecubeManager.pokemobToItem(poke);
             if (player.abilities.allowFlying)
             {
@@ -329,150 +307,4 @@ public class TileEntityTransformer extends LockableLootTileEntity implements ICl
         final IPokemob pokemob = PokecubeManager.itemToPokemob(this.items.get(0), this.getWorld());
         return pokemob;
     }
-    //
-    // @Override
-    // public void read(BlockState state, CompoundNBT nbt)
-    // {
-    // super.read(state, nbt);
-    // if (nbt.contains("stack"))
-    // {
-    // CompoundNBT tag = nbt.getCompound("stack");
-    // stack.setTag(tag);
-    // }
-    // if (nbt.contains("nums")) nums = nbt.getIntArray("nums");
-    // if (nbt.contains("lvl")) lvl = nbt.getInt("lvl");
-    // stepTick = nbt.getInt("stepTick");
-    // random = nbt.getBoolean("random");
-    // pubby = nbt.getBoolean("public");
-    //
-    // if (!this.checkLootAndRead(nbt)) {
-    // this.stacks = NonNullList.withSize(this.getSizeInventory(),
-    // ItemStack.EMPTY);
-    // }
-    // ItemStackHelper.loadAllItems(nbt, this.stacks);
-    //
-    // }
-    //
-    // public void setStack(ItemStack stack)
-    // {
-    // this.stack = stack;
-    // }
-    //
-    // @Override
-    // public CompoundNBT write(CompoundNBT tagCompound)
-    // {
-    // super.write(tagCompound);
-    // if (stack.isEmpty())
-    // {
-    // CompoundNBT tag = new CompoundNBT();
-    // stack.write(tag);
-    // tagCompound.contains("stack");
-    // }
-    // if (nums != null) tagCompound.putIntArray("nums", nums);
-    // tagCompound.putInt("lvl", lvl);
-    // tagCompound.putInt("stepTick", stepTick);
-    // tagCompound.putBoolean("random", random);
-    // tagCompound.putBoolean("public", pubby);
-    //
-    // if (!this.checkLootAndWrite(tagCompound)) {
-    // ItemStackHelper.saveAllItems(tagCompound, this.stacks);
-    // }
-    //
-    // return tagCompound;
-    // }
-    //
-    // @Override
-    // public SUpdateTileEntityPacket getUpdatePacket() {
-    // return new SUpdateTileEntityPacket(this.pos, 0, this.getUpdateTag());
-    // }
-    //
-    // private final LazyOptional<? extends IItemHandler>[] handlers =
-    // SidedInvWrapper.create(this, Direction.values());
-    // @Override
-    // public <T> LazyOptional<T> getCapability(Capability<T> capability,
-    // @Nullable Direction facing) {
-    // if (!this.removed && facing != null && capability ==
-    // CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
-    // return handlers[facing.ordinal()].cast();
-    // return super.getCapability(capability, facing);
-    // }
-    //
-    // @Override
-    // public void remove() {
-    // super.remove();
-    // for (LazyOptional<? extends IItemHandler> handler : handlers)
-    // handler.invalidate();
-    // }
-    //
-    //
-    // @Override
-    // public int getSizeInventory() {
-    // return stacks.size();
-    // }
-    //
-    // @Override
-    // public CompoundNBT getUpdateTag() {
-    // return this.write(new CompoundNBT());
-    // }
-    //
-    // @Override
-    // public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt)
-    // {
-    // this.read(null, pkt.getNbtCompound());
-    // }
-    //
-    // @Override
-    // public boolean isEmpty() {
-    // for (ItemStack itemstack : this.stacks)
-    // if (!itemstack.isEmpty())
-    // return false;
-    // return true;
-    // }
-    //
-    // @Override
-    // public int getInventoryStackLimit() {
-    // return 1;
-    // }
-    //
-    // @Override
-    // public int[] getSlotsForFace(Direction side) {
-    // return IntStream.range(0, this.getSizeInventory()).toArray();
-    // }
-    //
-    // @Override
-    // public boolean canInsertItem(int index, ItemStack stack, @Nullable
-    // Direction direction) {
-    // return this.isItemValidForSlot(index, stack);
-    // }
-    //
-    // @Override
-    // public boolean canExtractItem(int index, ItemStack stack, Direction
-    // direction) {
-    // return true;
-    // }
-    //
-    // @Override
-    // protected NonNullList<ItemStack> getItems() {
-    // return this.stacks;
-    // }
-    //
-    // @Override
-    // protected void setItems(NonNullList<ItemStack> stacks) {
-    // this.stacks = stacks;
-    // }
-    //
-    // @Override
-    // public boolean isItemValidForSlot(int index, ItemStack stack) {
-    // return true;
-    // }
-    //
-    // @Override
-    // public ITextComponent getDefaultName() {
-    // return new StringTextComponent("A");
-    // }
-    //
-    // @Override
-    // public Container createMenu(int id, PlayerInventory player) {
-    // return ChestContainer.createGeneric9X3(id, player, this);
-    // }
 }

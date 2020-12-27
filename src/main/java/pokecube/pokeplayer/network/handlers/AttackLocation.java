@@ -9,19 +9,21 @@ import pokecube.core.events.pokemob.combat.CommandAttackEvent;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.Move_Base;
 import pokecube.core.interfaces.pokemob.ai.CombatStates;
+import pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler;
 import pokecube.core.moves.MovesUtils;
+import pokecube.core.network.pokemobs.PacketCommand.DefaultHandler;
 import thut.api.maths.Vector3;
 
 // Wrapper to ensure player attacks entity as pokeplayer
-public class AttackLocationHandler extends pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler
+public class AttackLocation extends DefaultHandler
 {
-    //Vector3 location;
+    Vector3 location;
 
-    public AttackLocationHandler()
+    public AttackLocation()
     {
     }
 
-    public AttackLocationHandler(Vector3 location)
+    public AttackLocation(Vector3 location)
     {
         this.location = location.copy();
     }
@@ -61,7 +63,7 @@ public class AttackLocationHandler extends pokecube.core.interfaces.pokemob.comm
         else
         {
             // Do default behaviour.
-            pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler defaults = new pokecube.core.interfaces.pokemob.commandhandlers.AttackLocationHandler();
+            AttackLocationHandler defaults = new AttackLocationHandler();
             ByteBuf buffer = Unpooled.buffer();
             this.writeToBuf(buffer);
             defaults.readFromBuf(buffer);
@@ -69,7 +71,7 @@ public class AttackLocationHandler extends pokecube.core.interfaces.pokemob.comm
         }
     }
 
-    /*@Override
+    @Override
     public void writeToBuf(ByteBuf buf)
     {
         super.writeToBuf(buf);
@@ -81,5 +83,5 @@ public class AttackLocationHandler extends pokecube.core.interfaces.pokemob.comm
     {
         super.readFromBuf(buf);
         location = Vector3.readFromBuff(buf);
-    }*/
+    }
 }

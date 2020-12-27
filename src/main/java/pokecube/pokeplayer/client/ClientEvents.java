@@ -8,24 +8,27 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent.RawMouseEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import pokecube.core.PokecubeCore;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.client.gui.GuiPokedex;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.pokemob.IHasCommands.Command;
-import pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler;
 import pokecube.core.network.pokemobs.PacketCommand;
 import pokecube.pokeplayer.PokeInfo;
+import pokecube.pokeplayer.network.handlers.Stance;
 import thut.core.common.handlers.PlayerDataHandler;
 
+@EventBusSubscriber(value = Dist.CLIENT)
 public class ClientEvents
-{
+{	
     public IPokemob getPokemob(final PlayerEntity player)
     {
         final IPokemob ret = PokeInfo.getPokemob(player);
@@ -72,7 +75,7 @@ public class ClientEvents
             if (button == 1 && ctrl)
             {
                 // Our custom StanceHandler will do interaction code on -2
-                PacketCommand.sendCommand(pokemob, Command.STANCE, new StanceHandler(true, (byte) -2));
+                PacketCommand.sendCommand(pokemob, Command.STANCE, new Stance(true, (byte) -2));
 
                 final EntityInteractSpecific evt = new EntityInteractSpecific(player, Hand.MAIN_HAND, pokemob
                         .getEntity(), new Vector3d(0, 0, 0));

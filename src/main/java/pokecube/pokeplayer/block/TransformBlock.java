@@ -58,51 +58,7 @@ public class TransformBlock extends PressurePlateBlock
             ((TileEntityTransformer) tile).onWalkedOn(entityIn);
         }
     }
-//    
-//    @Override
-//    public void onEntityWalk(World worldIn, BlockPos pos, Entity entityIn) 
-//    {
-//      TileEntity tile = worldIn.getTileEntity(pos);
-//      if (tile instanceof TileEntityTransformer && entityIn instanceof PlayerEntity)
-//      {
-//          ((TileEntityTransformer) tile).onWalkedOn(entityIn);
-//          PokePlayer.LOGGER.debug("PIsou");
-//      }
-//      super.onEntityWalk(worldIn, pos, entityIn);
-//    }
-//	@Override
-//    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand,
-//			BlockRayTraceResult hit)
-//    {
-//        final TileEntity tile = worldIn.getTileEntity(pos);
-//        if (tile instanceof TileEntityTransformer) 
-//       return ((TileEntityTransformer) tile).onInteract(pos, playerIn, hand, hit);
-//        return ActionResultType.PASS;
-//    }
-    
-//    @Override
-//    public void onEntityWalk(final World world, final BlockPos pos, final Entity entity)
-//    {
-//    	super.onEntityWalk(world, pos, entity);
-//        TileEntity tile = world.getTileEntity(pos);
-//        if (tile instanceof TileEntityTransformer && entity instanceof PlayerEntity)
-//        {
-//            ((TileEntityTransformer) tile).onStepped((PlayerEntity) entity, world);
-//        }
-//    }
-    
-//    /** Called When an Entity Collided with the Block */
-//    @Override
-//    public void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn) 
-//    {
-//        TileEntity tile = worldIn.getTileEntity(pos);
-//        if (tile instanceof TileEntityTransformer && entityIn instanceof PlayerEntity)
-//        {
-//            ((TileEntityTransformer) tile).onWalkedOn(entityIn);
-//        }
-//        super.onEntityCollision(state, worldIn, pos, entityIn);
-//    }
-    
+
     @Override
     public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
     	if (state.getBlock() != newState.getBlock()) {

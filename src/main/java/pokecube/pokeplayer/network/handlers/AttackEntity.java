@@ -13,11 +13,12 @@ import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.Move_Base;
 import pokecube.core.interfaces.capabilities.CapabilityPokemob;
 import pokecube.core.interfaces.pokemob.ai.CombatStates;
+import pokecube.core.interfaces.pokemob.commandhandlers.AttackEntityHandler;
 import pokecube.core.moves.MovesUtils;
 import thut.api.maths.Vector3;
 
 // Wrapper to ensure player attacks entity as pokeplayer
-public class AttackEntityHandler extends pokecube.core.interfaces.pokemob.commandhandlers.AttackEntityHandler
+public class AttackEntity extends AttackEntityHandler
 {
     @Override
     public void handleCommand(IPokemob pokemob)

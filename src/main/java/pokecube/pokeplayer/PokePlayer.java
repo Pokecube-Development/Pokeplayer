@@ -16,6 +16,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import pokecube.core.PokecubeCore;
+import pokecube.pokeplayer.client.ClientEvents;
 import pokecube.pokeplayer.init.BlockInit;
 import pokecube.pokeplayer.init.ContainerInit;
 import pokecube.pokeplayer.init.TileEntityInit;

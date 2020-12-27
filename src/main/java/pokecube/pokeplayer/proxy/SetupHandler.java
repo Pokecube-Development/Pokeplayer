@@ -11,5 +11,6 @@ public class SetupHandler
 	@SubscribeEvent
     public static void setup(final FMLCommonSetupEvent event)
     {
+		
     }
 }

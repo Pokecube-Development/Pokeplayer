@@ -7,6 +7,7 @@ import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraftforge.api.distmarker.Dist;
 import pokecube.core.PokecubeItems;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.pokeplayer.PokeInfo;
@@ -64,10 +65,10 @@ public class ContainerPokemob extends Container
             public ItemStack onTake(PlayerEntity playerIn, ItemStack stack)
             {
                 ItemStack old = getStack();
-//                if(FMLCommonHandler.instance().getEffectiveSide() == Dist.DEDICATED_SERVER)
-//                {
+                if(Dist.DEDICATED_SERVER != null)
+                {
                     e.getPokedexEntry().onHeldItemChange(stack, old, e);
-//                }
+                }
                 return super.onTake(playerIn, stack);
             }
 
@@ -78,10 +79,10 @@ public class ContainerPokemob extends Container
             public void putStack(ItemStack stack)
             {
                 super.putStack(stack);
-//                if(FMLCommonHandler.instance().getEffectiveSide() == Dist.DEDICATED_SERVER)
-//                {
+                if(Dist.DEDICATED_SERVER != null)
+                {
                     e.setHeldItem(stack);
-//                }
+                }
             }
 		});
 		int j;
