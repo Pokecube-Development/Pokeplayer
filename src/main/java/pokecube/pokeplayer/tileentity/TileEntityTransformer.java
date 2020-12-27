@@ -268,7 +268,7 @@ public class TileEntityTransformer extends LockableLootTileEntity implements ICl
             tag.remove("playerID");
             info.detach();
             final ItemStack pokemob = PokecubeManager.pokemobToItem(poke);
-            if (player.abilities.allowFlying)
+            if (player.abilities.allowFlying && !player.isCreative())
             {
                 player.abilities.allowFlying = false;
                 player.sendPlayerAbilities();

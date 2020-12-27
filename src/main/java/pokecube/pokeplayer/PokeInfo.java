@@ -167,6 +167,8 @@ public class PokeInfo extends PlayerData
         if (!player.abilities.isCreativeMode) {
         	if (player instanceof ServerPlayerEntity && player.addedToChunk)
 	        {
+        		setFlying(player, true);
+        		
 	            float playerHealth = player.getHealth();
 	            
 	            /** Player has healed somehow, this is fine. */
@@ -255,9 +257,8 @@ public class PokeInfo extends PlayerData
     private void setFlying(final PlayerEntity player, final boolean set)
     {
         if (this.pokemob == null) return;
-        final boolean fly = this.pokemob.floats() || this.pokemob.flys() || !set;
-        final boolean check = !player.abilities.allowFlying;
-        if (fly && check && player.getEntityWorld().isRemote && !player.abilities.isCreativeMode)
+        final boolean fly = this.pokemob.floats() || this.pokemob.flys();
+        if (fly && /*player.getEntityWorld().isRemote &&*/ !player.abilities.isCreativeMode)
         {
             player.abilities.allowFlying = set;
             player.sendPlayerAbilities();
