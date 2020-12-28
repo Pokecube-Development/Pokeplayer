@@ -264,7 +264,6 @@ public class TileEntityTransformer extends LockableLootTileEntity implements ICl
             poke.setPokemonNickname(tag.getString("oldName"));
             PokecubeCore.LOGGER.debug("Converting {} back to a human", player.getDisplayName().getString());
             tag.remove("oldName");
-//            tag.remove("is_a_player");
             tag.remove("playerID");
             info.detach();
             final ItemStack pokemob = PokecubeManager.pokemobToItem(poke);

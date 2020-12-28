@@ -295,7 +295,8 @@ public class PokeInfo extends PlayerData
     {
         this.attached = false;
         if (this.pokemob == null) return ItemStack.EMPTY;
-        this.pokemob.getEntity().getPersistentData().remove("is_a_player");
+//        this.pokemob.getEntity().getPersistentData().remove("is_a_player");
+        this.pokemob.getEntity().getPersistentData().putBoolean("is_a_player", false);
         return PokecubeManager.pokemobToItem(this.pokemob);
     }
 

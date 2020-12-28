@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.common.MinecraftForge;
+import pokecube.core.ai.tasks.idle.HungerTask;
 import pokecube.core.events.pokemob.combat.CommandAttackEvent;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.Move_Base;
@@ -17,13 +18,13 @@ import thut.api.maths.Vector3;
 // Wrapper to ensure player attacks entity as pokeplayer
 public class AttackLocation extends DefaultHandler
 {
-    Vector3 location;
+    protected Vector3 location;
 
     public AttackLocation()
     {
     }
 
-    public AttackLocation(Vector3 location)
+    public AttackLocation(final Vector3 location)
     {
         this.location = location.copy();
     }
@@ -48,8 +49,9 @@ public class AttackLocation extends DefaultHandler
                         new TranslationTextComponent(MovesUtils.getUnlocalizedMove(move.getName())));
                 if (fromOwner()) pokemob.displayMessageToOwner(mess);
 
+                final float value = HungerTask.calculateHunger(pokemob);
                 // If too hungry, send message about that.
-                if (pokemob.getHungerTime() > 0)
+                if (HungerTask.hitThreshold(value, HungerTask.HUNTTHRESHOLD))
                 {
                     mess = new TranslationTextComponent("pokemob.action.hungry", pokemob.getDisplayName());
                     if (fromOwner()) pokemob.displayMessageToOwner(mess);
@@ -57,7 +59,7 @@ public class AttackLocation extends DefaultHandler
                 }
 
                 // Otherwise set the location for execution of move.
-                pokemob.executeMove(null, location, 0);
+                pokemob.executeMove(null, this.location, 0);
             }
         }
         else
@@ -65,23 +67,24 @@ public class AttackLocation extends DefaultHandler
             // Do default behaviour.
             AttackLocationHandler defaults = new AttackLocationHandler();
             ByteBuf buffer = Unpooled.buffer();
+            this.location.writeToBuff(buffer);
             this.writeToBuf(buffer);
             defaults.readFromBuf(buffer);
             defaults.handleCommand(pokemob);
         }
+    }
+    
+    @Override
+    public void readFromBuf(ByteBuf buf)
+    {
+        super.readFromBuf(buf);
+        this.location = Vector3.readFromBuff(buf);
     }
 
     @Override
     public void writeToBuf(ByteBuf buf)
     {
         super.writeToBuf(buf);
-        location.writeToBuff(buf);
-    }
-
-    @Override
-    public void readFromBuf(ByteBuf buf)
-    {
-        super.readFromBuf(buf);
-        location = Vector3.readFromBuff(buf);
+        this.location.writeToBuff(buf);
     }
 }

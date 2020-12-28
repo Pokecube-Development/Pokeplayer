@@ -65,10 +65,10 @@ public class ContainerPokemob extends Container
             public ItemStack onTake(PlayerEntity playerIn, ItemStack stack)
             {
                 ItemStack old = getStack();
-                if(Dist.DEDICATED_SERVER != null)
-                {
+//                if(Dist.DEDICATED_SERVER != null)
+//                {
                     e.getPokedexEntry().onHeldItemChange(stack, old, e);
-                }
+//                }
                 return super.onTake(playerIn, stack);
             }
 
@@ -79,10 +79,10 @@ public class ContainerPokemob extends Container
             public void putStack(ItemStack stack)
             {
                 super.putStack(stack);
-                if(Dist.DEDICATED_SERVER != null)
-                {
+//                if(Dist.DEDICATED_SERVER != null)
+//                {
                     e.setHeldItem(stack);
-                }
+//                }
             }
 		});
 		int j;
