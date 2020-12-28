@@ -11,12 +11,14 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract
 import pokecube.core.PokecubeCore;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.pokemob.ai.LogicStates;
+import pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler;
+import pokecube.core.network.pokemobs.PacketCommand.DefaultHandler;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.network.PacketTransform;
 import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.world.mobs.data.PacketDataSync;
 
-public class StanceHandler extends pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler
+public class Stance extends DefaultHandler
 {
     public static final byte BUTTONTOGGLESIT = 2;
     public static final byte SELFINTERACT    = -2;
@@ -25,11 +27,11 @@ public class StanceHandler extends pokecube.core.interfaces.pokemob.commandhandl
     boolean state;
     byte    key;
 
-    public StanceHandler()
+    public Stance()
     {
     }
 
-    public StanceHandler(final Boolean state, final Byte key)
+    public Stance(final Boolean state, final Byte key)
     {
         this.state = state;
         this.key = key;
@@ -40,7 +42,7 @@ public class StanceHandler extends pokecube.core.interfaces.pokemob.commandhandl
     {
         super.handleCommand(pokemob);
         // Start by handling the default stance messages.
-        final pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler defaults = new pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler(
+        final StanceHandler defaults = new StanceHandler(
                 this.state, this.key);
         defaults.handleCommand(pokemob);
 
@@ -52,7 +54,7 @@ public class StanceHandler extends pokecube.core.interfaces.pokemob.commandhandl
             {
                 final PlayerEntity player = (PlayerEntity) entity;
 
-                if (this.key == StanceHandler.SELFINTERACT)
+                if (this.key == Stance.SELFINTERACT)
                 {
                     final EntityInteractSpecific evt = new EntityInteractSpecific(player, Hand.MAIN_HAND, pokemob
                             .getEntity(), new Vector3d(0, 0, 0));
@@ -66,8 +68,8 @@ public class StanceHandler extends pokecube.core.interfaces.pokemob.commandhandl
                     final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                     info.save(player);
                 }
-                else if (this.key == StanceHandler.SYNCUPDATE) PacketDataSync.sync((ServerPlayerEntity) player, pokemob.dataSync(), player.getEntityId(), true);
-                else if (this.key == StanceHandler.BUTTONTOGGLESIT)
+                else if (this.key == Stance.SYNCUPDATE) PacketDataSync.sync((ServerPlayerEntity) player, pokemob.dataSync(), player.getEntityId(), true);
+                else if (this.key == Stance.BUTTONTOGGLESIT)
                 {
                     final PacketTransform packet = new PacketTransform();
                     packet.id = player.getEntityId();
@@ -80,19 +82,18 @@ public class StanceHandler extends pokecube.core.interfaces.pokemob.commandhandl
     }
 
     @Override
-    public void writeToBuf(final ByteBuf buf)
-    {
-        super.writeToBuf(buf);
-        buf.writeBoolean(this.state);
-        buf.writeByte(this.key);
-    }
-
-    @Override
     public void readFromBuf(final ByteBuf buf)
     {
         super.readFromBuf(buf);
         this.state = buf.readBoolean();
         this.key = buf.readByte();
     }
-
+    
+    @Override
+    public void writeToBuf(final ByteBuf buf)
+    {
+        super.writeToBuf(buf);
+        buf.writeBoolean(this.state);
+        buf.writeByte(this.key);
+    }
 }

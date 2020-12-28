@@ -10,9 +10,9 @@ import pokecube.core.PokecubeCore;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.pokemob.IHasCommands.Command;
 import pokecube.core.interfaces.pokemob.ai.LogicStates;
-import pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler;
 import pokecube.core.network.pokemobs.PacketCommand;
 import pokecube.pokeplayer.PokeInfo;
+import pokecube.pokeplayer.network.handlers.Stance;
 import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.network.NBTPacket;
 import thut.core.common.network.PacketAssembly;
@@ -37,36 +37,7 @@ public class PacketTransform extends NBTPacket
         message.getTag().putInt("__entityid__", toSend.getEntityId());
         return message;
     }
-
-    // @Override
-    // public IMessage onMessage(final PacketTransform message, final
-    // MessageContext ctx)
-    // {
-    // PokecubeCore.proxy.getMainThreadListener().addScheduledTask(new
-    // Runnable()
-    // {
-    // @Override
-    // public void run()
-    // {
-    // apply(message, ctx);
-    // }
-    // });
-    // return null;
-    // }
-
-    // public void fromBytes(ByteBuf buf) throws IOException
-    // {
-    // id = buf.readInt();
-    // new PacketBuffer(buf).readCompoundTag();
-    // }
-    //
-    //
-    // public void toBytes(ByteBuf buf)
-    // {
-    // buf.writeInt(id);
-    // new PacketBuffer(buf).writeCompoundTag(this.getTag());
-    // }
-
+    
     public PacketTransform()
     {
         super();
@@ -97,10 +68,10 @@ public class PacketTransform extends NBTPacket
                 final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                 final IPokemob pokemob = info.getPokemob(world);
                 if (pokemob == null) return;
-                final float health = this.getTag().getFloat("H");
+                final float health = this.getTag().getFloat("M");
+//                final float healthPlayer = this.getTag().getFloat("H");
                 if (pokemob.getEntity() == null) return;
-                // float max = message.getTag().getFloat("M");
-                // pokemob.getEntity().getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(max);
+                
                 pokemob.setHealth(health);
                 player.setHealth(health);
             }
@@ -110,6 +81,7 @@ public class PacketTransform extends NBTPacket
                 final IPokemob pokemob = info.getPokemob(world);
                 if (pokemob == null) return;
                 pokemob.setLogicState(LogicStates.SITTING, this.getTag().getBoolean("S"));
+                PacketCommand.sendCommand(pokemob, Command.STANCE, new Stance(true, (byte) 2));
             }
             return;
         }
@@ -125,7 +97,7 @@ public class PacketTransform extends NBTPacket
                 info.set(pokemob, player);
                 // Callback to let server know to update us.
                 pokemob.getEntity().setEntityId(player.getEntityId());
-                PacketCommand.sendCommand(pokemob, Command.STANCE, new StanceHandler(true, (byte) -3));
+                PacketCommand.sendCommand(pokemob, Command.STANCE, new Stance(true, (byte) -3));
             }
             else info.resetPlayer(player);
         }

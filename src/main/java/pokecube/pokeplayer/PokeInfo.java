@@ -55,7 +55,7 @@ public class PokeInfo extends PlayerData
         pokemob.getEntity().getPersistentData().putBoolean("is_a_player", true);
         pokemob.getEntity().getPersistentData().putString("playerID", player.getUniqueID().toString());
         pokemob.getEntity().getPersistentData().putString("oldName", pokemob.getPokemonNickname());
-        pokemob.setPokemonNickname(player.getDisplayName().toString());
+        pokemob.setPokemonNickname(player.getDisplayName().getString());
         pokemob.setOwner(player);
         pokemob.initAI();
         player.recalculateSize();
@@ -161,52 +161,69 @@ public class PokeInfo extends PlayerData
             this.pokemob.setHungerTime(-PokecubeCore.getConfig().pokemobLifeSpan / 4);
         }
         // player.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(poke.getMaxHealth());
-
+        
         float health = poke.getHealth();
-        /** do not manage hp for creative mode players. */
-        if (!player.abilities.isCreativeMode) if (player instanceof ServerPlayerEntity && player.addedToChunk)
-        {
-            float playerHealth = player.getHealth();
-
-            /** Player has healed somehow, this is fine. */
-            if (playerHealth > health && this.lastDamage == null && health > 0 && playerHealth <= poke.getMaxHealth())
-                if (poke.getAttackTarget() == null) health = playerHealth;
-            else playerHealth = health;
-
-            /**
-             * If this is going to kill the player, do it with an attack, as
-             * this will properly kill the player.
-             */
-            if (health < playerHealth)
-            {
-                final DamageSource source = this.lastDamage == null ? DamageSource.GENERIC : this.lastDamage;
-                final float amount = playerHealth - health;
-                source.setDamageBypassesArmor().setDamageIsAbsolute();
-                player.attackEntityFrom(source, amount);
-            }
-            else player.setHealth(health);
-
-            // Sync pokehealth to player health.
-            playerHealth = player.getHealth();
-            poke.setHealth(playerHealth);
-
-            this.lastDamage = null;
-
-            health = playerHealth;
-
-            final PacketTransform packet = new PacketTransform();
-            packet.id = player.getEntityId();
-            packet.getTag().putBoolean("U", true);
-            packet.getTag().putFloat("H", health);
-            packet.getTag().putFloat("M", poke.getMaxHealth());
-            PacketTransform.sendPacket(player, (ServerPlayerEntity) player);
-
-            // Fixes the inventories appearing to vanish
-            if (player.getPersistentData().contains("_pokeplayer_evolved_") && player.getPersistentData().getLong(
-                    "_pokeplayer_evolved_") > player.getEntityWorld().getGameTime()) ((ServerPlayerEntity) player)
-                            .sendAllContents(player.container, player.container.inventoryItemStacks);
-            else player.getPersistentData().remove("_pokeplayer_evolved_");
-        }
+        // do not manage hp for creative mode players.
+        if (!player.abilities.isCreativeMode) {
+        	if (player instanceof ServerPlayerEntity && player.addedToChunk)
+	        {
+        		setFlying(player, true);
+        		
+	            float playerHealth = player.getHealth();
+	            
+	            /** Player has healed somehow, this is fine. */
+	            if (playerHealth > health && this.lastDamage == null && health > 0 && playerHealth <= poke.getMaxHealth()) 
+	            {
+	                if (poke.getAttackTarget() == null) {
+	                	health = playerHealth;
+	                }else { 
+	                	playerHealth = health;
+	                }
+	            }
+	
+//	            PokecubeCore.LOGGER.debug("Damage Player:" + healthP + "    Poke:" + playerHealth);
+	            
+	            /**
+	             * If this is going to kill the player, do it with an attack, as
+	             * this will properly kill the player.
+	             */
+	            //dano aleatório aki
+//	            if (health < playerHealth)
+//	            {
+//	                final DamageSource source = this.lastDamage == null ? DamageSource.GENERIC : this.lastDamage;
+//	                final float amount = playerHealth - health;
+//	                source.setDamageBypassesArmor().setDamageIsAbsolute();
+//	                player.attackEntityFrom(source, amount);
+//	            }
+//	            else {
+//	            	player.setHealth(health);
+//	            }
+	
+	            // Sync pokehealth to player health.
+//	            playerHealth = player.getHealth();
+//	            poke.setHealth(playerHealth);
+	
+//	            this.lastDamage = null;
+//	
+//	            health = playerHealth;
+	            
+	//            PokecubeCore.LOGGER.debug("Info Player:" + health + "Poke:" + playerHealth);
+	
+	            final PacketTransform packet = new PacketTransform();
+	            packet.id = player.getEntityId();
+	            packet.getTag().putBoolean("U", true);
+	            packet.getTag().putFloat("H", health);
+	            packet.getTag().putFloat("M", poke.getMaxHealth());
+//	            PacketTransform.sendPacket(player, (ServerPlayerEntity) player);
+	
+	            // Fixes the inventories appearing to vanish
+	            if (player.getPersistentData().contains("_pokeplayer_evolved_") && player.getPersistentData().getLong(
+	                    "_pokeplayer_evolved_") > player.getEntityWorld().getGameTime()) ((ServerPlayerEntity) player)
+	                            .sendAllContents(player.container, player.container.inventoryItemStacks);
+	            else player.getPersistentData().remove("_pokeplayer_evolved_");
+	        }
+    	}
+	        
         if (player.getHealth() > 0) player.deathTime = -1;
         poke.deathTime = player.deathTime;
 
@@ -240,9 +257,8 @@ public class PokeInfo extends PlayerData
     private void setFlying(final PlayerEntity player, final boolean set)
     {
         if (this.pokemob == null) return;
-        final boolean fly = this.pokemob.floats() || this.pokemob.flys() || !set;
-        final boolean check = set ? !player.abilities.allowFlying : player.abilities.allowFlying;
-        if (fly && check && player.getEntityWorld().isRemote && !player.abilities.isCreativeMode)
+        final boolean fly = this.pokemob.floats() || this.pokemob.flys();
+        if (fly && /*player.getEntityWorld().isRemote &&*/ !player.abilities.isCreativeMode)
         {
             player.abilities.allowFlying = set;
             player.sendPlayerAbilities();
@@ -271,15 +287,16 @@ public class PokeInfo extends PlayerData
     private void updateSwimming(final PlayerEntity player)
     {
         if (this.pokemob == null) return;
-        if (this.pokemob.getPokedexEntry().swims() || this.pokemob.isType(PokeType.getType("water"))) player.setAir(
-                300);
+        if (this.pokemob.getPokedexEntry().swims() || this.pokemob.isType(PokeType.getType("water"))) 
+        	player.setAir(300);
     }
 
     public ItemStack detach()
     {
         this.attached = false;
         if (this.pokemob == null) return ItemStack.EMPTY;
-        this.pokemob.getEntity().getPersistentData().remove("is_a_player");
+//        this.pokemob.getEntity().getPersistentData().remove("is_a_player");
+        this.pokemob.getEntity().getPersistentData().putBoolean("is_a_player", false);
         return PokecubeManager.pokemobToItem(this.pokemob);
     }
 
@@ -291,7 +308,7 @@ public class PokeInfo extends PlayerData
     @Override
     public String dataFileName()
     {
-        return "PokePlayer";
+        return "pokeplayer";
     }
 
     @Override
