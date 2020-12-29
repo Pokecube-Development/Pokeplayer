@@ -69,7 +69,6 @@ public class PacketTransform extends NBTPacket
                 final IPokemob pokemob = info.getPokemob(world);
                 if (pokemob == null) return;
                 final float health = this.getTag().getFloat("M");
-//                final float healthPlayer = this.getTag().getFloat("H");
                 if (pokemob.getEntity() == null) return;
                 
                 pokemob.setHealth(health);

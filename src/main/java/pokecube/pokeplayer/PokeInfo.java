@@ -258,7 +258,7 @@ public class PokeInfo extends PlayerData
     {
         if (this.pokemob == null) return;
         final boolean fly = this.pokemob.floats() || this.pokemob.flys();
-        if (fly && /*player.getEntityWorld().isRemote &&*/ !player.abilities.isCreativeMode)
+        if (fly && !player.abilities.isCreativeMode)
         {
             player.abilities.allowFlying = set;
             player.sendPlayerAbilities();
