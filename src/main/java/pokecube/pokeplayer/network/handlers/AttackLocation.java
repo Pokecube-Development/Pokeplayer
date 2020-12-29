@@ -40,36 +40,30 @@ public class AttackLocation extends DefaultHandler
             final CommandAttackEvent evt = new CommandAttackEvent(pokemob.getEntity(), null);
             PokecubeCore.POKEMOB_BUS.post(evt);
 
-            if (!evt.isCanceled() && currentMove != 5 && MovesUtils.canUseMove(pokemob))
+            pokemob.setCombatState(CombatStates.EXECUTINGMOVE, false);
+            pokemob.setCombatState(CombatStates.NOITEMUSE, false);
+            final Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
+            
+            PokecubeCore.LOGGER.debug("Confirm Location");
+            // Send move use message first.
+            ITextComponent mess = new TranslationTextComponent("pokemob.action.usemove",
+                    pokemob.getDisplayName(),
+                    new TranslationTextComponent(MovesUtils.getUnlocalizedMove(move.getName())));
+            if (fromOwner()) pokemob.displayMessageToOwner(mess);
+
+            final float value = HungerTask.calculateHunger(pokemob);
+            
+            // If too hungry, send message about that.
+            if (HungerTask.hitThreshold(value, HungerTask.HUNTTHRESHOLD))
             {
-                pokemob.setCombatState(CombatStates.EXECUTINGMOVE, false);
-                pokemob.setCombatState(CombatStates.NOITEMUSE, false);
-                final Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
-                
-                PokecubeCore.LOGGER.debug("Confirm Location");
-                // Send move use message first.
-                ITextComponent mess = new TranslationTextComponent("pokemob.action.usemove",
-                        pokemob.getDisplayName(),
-                        new TranslationTextComponent(MovesUtils.getUnlocalizedMove(move.getName())));
-                if (fromOwner()) pokemob.displayMessageToOwner(mess);
-
-                final float value = HungerTask.calculateHunger(pokemob);
-                
-             // If too hungry, send message about that.
-                if (HungerTask.hitThreshold(value, HungerTask.HUNTTHRESHOLD))
-                {
-                    mess = new TranslationTextComponent("pokemob.action.hungry", pokemob.getDisplayName());
-                    if (this.fromOwner()) pokemob.displayMessageToOwner(mess);
-                    return;
-                }
-
-//                // Otherwise set the location for execution of move.
-//                BrainUtils.setMoveUseTarget(pokemob.getEntity(), this.location);
-                
-                PokecubeCore.LOGGER.debug("Execute Location");
-                // Otherwise set the location for execution of move.
-                pokemob.executeMove(null, location, 0);
+                mess = new TranslationTextComponent("pokemob.action.hungry", pokemob.getDisplayName());
+                if (this.fromOwner()) pokemob.displayMessageToOwner(mess);
+                return;
             }
+
+            PokecubeCore.LOGGER.debug("Execute Location");
+            // Otherwise set the location for execution of move.
+            pokemob.executeMove(null, location, 0);
         }
         else
         {

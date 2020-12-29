@@ -86,17 +86,6 @@ public class PokeInfo extends PlayerData
         final DataSync sync = SyncHandler.getData(player);
         if (sync instanceof DataSyncWrapper) ((DataSyncWrapper) sync).wrapped = this.pokemob.dataSync();
         this.pokemob.setSize((float) (this.pokemob.getSize() / PokecubeCore.getConfig().scalefactor));
-
-        // pokemob.getAI().aiTasks.removeIf(new Predicate<IAIRunnable>()
-        // {
-        // @Override
-        // public boolean test(IAIRunnable t)
-        // {
-        // boolean allowed = t instanceof AIHungry;
-        // allowed = allowed || t instanceof AIMate;
-        // return !allowed;
-        // }
-        // });
         player.stepHeight = this.pokemob.getEntity().getEyeHeight();
         this.setFlying(player, true);
         this.save(player);
@@ -124,17 +113,6 @@ public class PokeInfo extends PlayerData
         final float eye = poke.getEyeHeight(Pose.STANDING);
         if (eye != player.getEyeHeight()) player.recalculateSize();
 
-        // // Fixes pokemob sometimes targetting self.
-        // if (poke.getAttackTarget() == player || poke.getAttackTarget() ==
-        // poke)
-        // {
-        // boolean old = AIFindTarget.handleDamagedTargets;
-        // AIFindTarget.handleDamagedTargets = false;
-        // poke.setAttackTarget(null);
-        // pokemob.setTargetID(-1);
-        // AIFindTarget.handleDamagedTargets = old;
-        // }
-
         // Flag the data sync dirty every so often to ensure things stay synced.
         if (poke.ticksExisted % 20 == 0) for (final Data<?> d : this.pokemob.dataSync().getAll())
             d.setDirty(true);
@@ -160,7 +138,6 @@ public class PokeInfo extends PlayerData
             poke.setHealth(poke.getMaxHealth());
             this.pokemob.setHungerTime(-PokecubeCore.getConfig().pokemobLifeSpan / 4);
         }
-        // player.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(poke.getMaxHealth());
         
         float health = poke.getHealth();
         // do not manage hp for creative mode players.
@@ -287,15 +264,16 @@ public class PokeInfo extends PlayerData
     private void updateSwimming(final PlayerEntity player)
     {
         if (this.pokemob == null) return;
-        if (this.pokemob.getPokedexEntry().swims() || this.pokemob.isType(PokeType.getType("water"))) 
+        if (this.pokemob.getPokedexEntry().swims() || this.pokemob.isType(PokeType.getType("water"))) { 
         	player.setAir(300);
+        	
+        }
     }
 
     public ItemStack detach()
     {
         this.attached = false;
         if (this.pokemob == null) return ItemStack.EMPTY;
-//        this.pokemob.getEntity().getPersistentData().remove("is_a_player");
         this.pokemob.getEntity().getPersistentData().putBoolean("is_a_player", false);
         return PokecubeManager.pokemobToItem(this.pokemob);
     }
