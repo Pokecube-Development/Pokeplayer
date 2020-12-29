@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.common.MinecraftForge;
+import pokecube.core.PokecubeCore;
 import pokecube.core.ai.tasks.idle.HungerTask;
 import pokecube.core.events.pokemob.combat.CommandAttackEvent;
 import pokecube.core.interfaces.IPokemob;
@@ -18,7 +18,7 @@ import thut.api.maths.Vector3;
 // Wrapper to ensure player attacks entity as pokeplayer
 public class AttackLocation extends DefaultHandler
 {
-    protected Vector3 location;
+	Vector3 location;
 
     public AttackLocation()
     {
@@ -34,33 +34,36 @@ public class AttackLocation extends DefaultHandler
     {
         if (pokemob.getEntity().getPersistentData().getBoolean("is_a_player"))
         {
-            int currentMove = pokemob.getMoveIndex();
-            CommandAttackEvent evt = new CommandAttackEvent(pokemob.getEntity(), null);
-            MinecraftForge.EVENT_BUS.post(evt);
+        	PokecubeCore.LOGGER.debug("Location");
+        	
+        	final int currentMove = pokemob.getMoveIndex();
+            final CommandAttackEvent evt = new CommandAttackEvent(pokemob.getEntity(), null);
+            PokecubeCore.POKEMOB_BUS.post(evt);
 
-            if (!evt.isCanceled() && currentMove != 5 && MovesUtils.canUseMove(pokemob))
+            pokemob.setCombatState(CombatStates.EXECUTINGMOVE, false);
+            pokemob.setCombatState(CombatStates.NOITEMUSE, false);
+            final Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
+            
+            PokecubeCore.LOGGER.debug("Confirm Location");
+            // Send move use message first.
+            ITextComponent mess = new TranslationTextComponent("pokemob.action.usemove",
+                    pokemob.getDisplayName(),
+                    new TranslationTextComponent(MovesUtils.getUnlocalizedMove(move.getName())));
+            if (fromOwner()) pokemob.displayMessageToOwner(mess);
+
+            final float value = HungerTask.calculateHunger(pokemob);
+            
+            // If too hungry, send message about that.
+            if (HungerTask.hitThreshold(value, HungerTask.HUNTTHRESHOLD))
             {
-                pokemob.setCombatState(CombatStates.EXECUTINGMOVE, false);
-                pokemob.setCombatState(CombatStates.NOITEMUSE, false);
-                Move_Base move = MovesUtils.getMoveFromName(pokemob.getMoves()[currentMove]);
-                // Send move use message first.
-                ITextComponent mess = new TranslationTextComponent("pokemob.action.usemove",
-                        pokemob.getDisplayName(),
-                        new TranslationTextComponent(MovesUtils.getUnlocalizedMove(move.getName())));
-                if (fromOwner()) pokemob.displayMessageToOwner(mess);
-
-                final float value = HungerTask.calculateHunger(pokemob);
-                // If too hungry, send message about that.
-                if (HungerTask.hitThreshold(value, HungerTask.HUNTTHRESHOLD))
-                {
-                    mess = new TranslationTextComponent("pokemob.action.hungry", pokemob.getDisplayName());
-                    if (fromOwner()) pokemob.displayMessageToOwner(mess);
-                    return;
-                }
-
-                // Otherwise set the location for execution of move.
-                pokemob.executeMove(null, this.location, 0);
+                mess = new TranslationTextComponent("pokemob.action.hungry", pokemob.getDisplayName());
+                if (this.fromOwner()) pokemob.displayMessageToOwner(mess);
+                return;
             }
+
+            PokecubeCore.LOGGER.debug("Execute Location");
+            // Otherwise set the location for execution of move.
+            pokemob.executeMove(null, location, 0);
         }
         else
         {
