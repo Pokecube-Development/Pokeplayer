@@ -1,1 +1,1 @@
-cmd /k gradlew genEclipseRuns
+cmd /k gradlew genEclipseRuns --refresh-dependencies

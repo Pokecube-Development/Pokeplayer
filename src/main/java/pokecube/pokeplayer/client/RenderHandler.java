@@ -19,7 +19,7 @@ public class RenderHandler
     {
         final PlayerEntity player = Minecraft.getInstance().player;
         final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
-        if (info.getPokemob(player.world) != null) event.setCanceled(true);
+        if (info.getPokemob(player.getEntityWorld()) != null) event.setCanceled(true);
     }
 
 	@SubscribeEvent
@@ -27,8 +27,8 @@ public class RenderHandler
     {
         final PlayerEntity player = (PlayerEntity) event.getEntity();
         final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
-        if (info.getPokemob(player.world) == null) return;
-        final LivingEntity entity = info.getPokemob(player.world).getEntity();
+        if (info.getPokemob(player.getEntityWorld()) == null) return;
+        final LivingEntity entity = info.getPokemob(player.getEntityWorld()).getEntity();
         final boolean backup = event.getRenderer().getRenderManager().info.isValid();
         // EntityTools.copyEntityTransforms(entity, player);
         event.getRenderer().getRenderManager().setRenderShadow(false);
@@ -41,5 +41,4 @@ public class RenderHandler
         event.getRenderer().getRenderManager().setRenderShadow(backup);
         event.setCanceled(true);
     }
-
 }

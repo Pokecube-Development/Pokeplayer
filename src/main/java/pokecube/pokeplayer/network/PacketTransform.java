@@ -63,12 +63,12 @@ public class PacketTransform extends NBTPacket
         if (this.getTag().contains("U"))
         {
             final PlayerEntity player = PokecubeCore.proxy.getPlayer();
-            if (this.getTag().contains("H"))
+            if (this.getTag().contains("M"))
             {
                 final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                 final IPokemob pokemob = info.getPokemob(world);
                 if (pokemob == null) return;
-                final float health = this.getTag().getFloat("M");
+                final float health = this.getTag().getFloat("H");
                 if (pokemob.getEntity() == null) return;
                 
                 pokemob.setHealth(health);

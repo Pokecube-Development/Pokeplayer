@@ -42,6 +42,7 @@ minecraft {
             properties '-XX': '+FlightRecorder'
             properties 'forge.logging.console.level': 'debug'
             workingDirectory project.file('run').canonicalPath
+			arg "-mixin.config=pokecube.mixins.json"
             source sourceSets.main
         }
         server = {
@@ -76,7 +77,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${version_minecraft}-${version_forge}"
 
     // The below line can be uncommented and adjusted if you provide the jar via /libs
-    // implementation "libs:pokecube-aio-1.16.4-3.1.2-deobf"
+    //implementation "pokecube-aio-1.16.4-3.5.1-deobf"
     
     // If the above line is uncommented, the below should be commented out.
     implementation "pokecube-aoi:pokecube-aio:release:deobf"
@@ -112,3 +113,5 @@ def cleanTOML()
 {
     delete "./build/resources/main/META-INF/mods.toml" 
 }
+
+apply plugin: 'org.spongepowered.mixin'

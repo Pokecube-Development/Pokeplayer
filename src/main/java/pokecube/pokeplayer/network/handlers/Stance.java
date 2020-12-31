@@ -12,14 +12,19 @@ import pokecube.core.PokecubeCore;
 import pokecube.core.interfaces.IPokemob;
 import pokecube.core.interfaces.pokemob.ai.LogicStates;
 import pokecube.core.interfaces.pokemob.commandhandlers.StanceHandler;
-import pokecube.core.network.pokemobs.PacketCommand.DefaultHandler;
 import pokecube.pokeplayer.PokeInfo;
 import pokecube.pokeplayer.network.PacketTransform;
 import thut.core.common.handlers.PlayerDataHandler;
 import thut.core.common.world.mobs.data.PacketDataSync;
 
-public class Stance extends DefaultHandler
+public class Stance extends StanceHandler
 {
+//	@Override
+//    public void handleCommand(final IPokemob pokemob) throws Exception
+//    {
+//        super.handleCommand(pokemob);
+//    }
+//}
     public static final byte BUTTONTOGGLESIT = 2;
     public static final byte SELFINTERACT    = -2;
     public static final byte SYNCUPDATE      = -3;
@@ -68,7 +73,9 @@ public class Stance extends DefaultHandler
                     final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
                     info.save(player);
                 }
-                else if (this.key == Stance.SYNCUPDATE) PacketDataSync.sync((ServerPlayerEntity) player, pokemob.dataSync(), player.getEntityId(), true);
+                else if (this.key == Stance.SYNCUPDATE) {
+                	PacketDataSync.sync((ServerPlayerEntity) player, pokemob.dataSync(), player.getEntityId(), true);
+                }
                 else if (this.key == Stance.BUTTONTOGGLESIT)
                 {
                     final PacketTransform packet = new PacketTransform();

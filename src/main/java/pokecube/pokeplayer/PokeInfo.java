@@ -47,7 +47,7 @@ public class PokeInfo extends PlayerData
         if (this.attached) return;
         this.stack = PokecubeManager.pokemobToItem(pokemob);
         this.pokemob = pokemob;
-        this.pokeInventory = new InventoryPlayerPokemob(this, player.world);
+        this.pokeInventory = new InventoryPlayerPokemob(this, player.getEntityWorld());
         this.originalHeight = player.getHeight();
         this.originalWidth = player.getWidth();
         this.originalHP = player.getMaxHealth();
@@ -177,12 +177,12 @@ public class PokeInfo extends PlayerData
 //	            }
 	
 	            // Sync pokehealth to player health.
-//	            playerHealth = player.getHealth();
-//	            poke.setHealth(playerHealth);
+	            playerHealth = player.getHealth();
+	            poke.setHealth(playerHealth);
 	
-//	            this.lastDamage = null;
-//	
-//	            health = playerHealth;
+	            this.lastDamage = null;
+	
+	            health = playerHealth;
 	            
 	//            PokecubeCore.LOGGER.debug("Info Player:" + health + "Poke:" + playerHealth);
 	
@@ -207,7 +207,9 @@ public class PokeInfo extends PlayerData
         int num = this.pokemob.getHungerTime();
         final int max = PokecubeCore.getConfig().pokemobLifeSpan;
         num = Math.round((max - num) * 20 / (float) max);
-        if (player.isCreative()) num = 20;
+        if (player.isCreative()) {
+        	num = 20;
+        }
         player.getFoodStats().setFoodLevel(num);
 
         this.updateFloating(player);
@@ -361,7 +363,7 @@ public class PokeInfo extends PlayerData
     {
         if (player == null || player.getUniqueID() == null) return null;
         final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
-        return info.getPokemob(player.world);
+        return info.getPokemob(player.getEntityWorld());
     }
 
     public static void updateInfo(final PlayerEntity player, final World world)
