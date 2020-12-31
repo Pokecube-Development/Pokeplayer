@@ -22,17 +22,12 @@ import thut.core.common.handlers.PlayerDataHandler;
 
 public class GuiAsPokemob extends GuiDisplayPokecubeInfo
 {
-    public GuiAsPokemob()
-    {
-        super();
-    }
-
-    @Override
+	@Override
     public IPokemob[] getPokemobsToDisplay()
     {
         final PlayerEntity player = Minecraft.getInstance().player;
         final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
-        final IPokemob pokemob = info.getPokemob(player.world);
+        final IPokemob pokemob = info.getPokemob(player.getEntityWorld());
         if (pokemob != null) return new IPokemob[] { pokemob };
         return super.getPokemobsToDisplay();
     }
@@ -42,7 +37,7 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
     {
         final PlayerEntity player = Minecraft.getInstance().player;
         final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
-        final IPokemob pokemob = info.getPokemob(player.world);
+        final IPokemob pokemob = info.getPokemob(player.getEntityWorld());
         if (pokemob != null) return pokemob;
         return super.getCurrentPokemob();
     }
@@ -52,7 +47,7 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
     {
         final PlayerEntity player = Minecraft.getInstance().player;
         final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
-        final IPokemob pokemob = info.getPokemob(player.world);
+        final IPokemob pokemob = info.getPokemob(player.getEntityWorld());
         if (pokemob == null)
         {
             super.pokemobAttack();
@@ -85,18 +80,82 @@ public class GuiAsPokemob extends GuiDisplayPokecubeInfo
                 new AttackLocationHandler(targetLocation));
         else PacketCommand.sendCommand(pokemob, Command.ATTACKNOTHING, new AttackNothingHandler());
     }
-
-    @Override
-    public void pokemobBack()
-    {
-        if (!isPokemob()) super.pokemobBack();
-    }
-
-    boolean isPokemob()
-    {
-    	final PlayerEntity player = Minecraft.getInstance().player;
-        final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
-        final IPokemob pokemob = info.getPokemob(player.world);
-        return pokemob != null;
-    }
 }
+//    public GuiAsPokemob()
+//    {
+//        super();
+//    }
+//
+//    @Override
+//    public IPokemob[] getPokemobsToDisplay()
+//    {
+//        final PlayerEntity player = Minecraft.getInstance().player;
+//        final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+//        final IPokemob pokemob = info.getPokemob(player.world);
+//        if (pokemob != null) return new IPokemob[] { pokemob };
+//        return super.getPokemobsToDisplay();
+//    }
+//
+//    @Override
+//    public IPokemob getCurrentPokemob()
+//    {
+//        final PlayerEntity player = Minecraft.getInstance().player;
+//        final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+//        final IPokemob pokemob = info.getPokemob(player.world);
+//        if (pokemob != null) return pokemob;
+//        return super.getCurrentPokemob();
+//    }
+//
+//    @Override
+//    public void pokemobAttack()
+//    {
+//        final PlayerEntity player = Minecraft.getInstance().player;
+//        final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+//        final IPokemob pokemob = info.getPokemob(player.world);
+//        if (pokemob == null)
+//        {
+//            super.pokemobAttack();
+//            return;
+//        }
+//        if (pokemob.getAttackCooldown() > 0) return;
+//        final Entity target = Tools.getPointedEntity(player, 32);
+//        final Vector3 targetLocation = Tools.getPointedLocation(player, 32);
+//        boolean sameOwner = false;
+//        final IPokemob targetMob = CapabilityPokemob.getPokemobFor(target);
+//        if (targetMob != null) sameOwner = targetMob.getOwner() == player;
+//        if (pokemob != null)
+//        {
+//            if (pokemob.getMove(pokemob.getMoveIndex()) == null) return;
+//            if (pokemob.getMove(pokemob.getMoveIndex()).equalsIgnoreCase(IMoveNames.MOVE_TELEPORT))
+//            {
+//                if (!GuiTeleport.instance().getState())
+//                {
+//                    GuiTeleport.instance().setState(true);
+//                    return;
+//                }
+//                GuiTeleport.instance().setState(false);
+//                PacketCommand.sendCommand(pokemob, Command.TELEPORT, new TeleportHandler());
+//                return;
+//            }
+//        }
+//        if (target != null && !sameOwner && target instanceof LivingEntity) PacketCommand.sendCommand(pokemob,
+//                Command.ATTACKENTITY, new AttackEntityHandler(target.getEntityId()));
+//        else if (targetLocation != null) PacketCommand.sendCommand(pokemob, Command.ATTACKLOCATION,
+//                new AttackLocationHandler(targetLocation));
+//        else PacketCommand.sendCommand(pokemob, Command.ATTACKNOTHING, new AttackNothingHandler());
+//    }
+//
+//    @Override
+//    public void pokemobBack()
+//    {
+//        if (!isPokemob()) super.pokemobBack();
+//    }
+//
+//    boolean isPokemob()
+//    {
+//    	final PlayerEntity player = Minecraft.getInstance().player;
+//        final PokeInfo info = PlayerDataHandler.getInstance().getPlayerData(player).getData(PokeInfo.class);
+//        final IPokemob pokemob = info.getPokemob(player.world);
+//        return pokemob != null;
+//    }
+//}

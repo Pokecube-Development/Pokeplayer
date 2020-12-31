@@ -2,6 +2,7 @@ package pokecube.pokeplayer.tileentity;
 
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import com.google.common.collect.Lists;
 
@@ -238,8 +239,10 @@ public class TileEntityTransformer extends LockableLootTileEntity implements ICl
 
         if (hasPokemob && !isPokemob)
         {
+        	
             final IPokemob pokemob = this.getPokemob();
-            if (pokemob != null &&  pokemob.getHealth() != 0)
+            final UUID playerTrainer = pokemob.getOwnerId();
+            if (pokemob != null &&  pokemob.getHealth() != 0 && playerTrainer != player.getUniqueID())
             {
                 PokeInfo.setPokemob(player, pokemob);
                 this.items.set(0, ItemStack.EMPTY);

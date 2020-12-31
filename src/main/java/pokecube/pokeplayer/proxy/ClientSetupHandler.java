@@ -11,11 +11,6 @@ import pokecube.core.PokecubeCore;
 import pokecube.core.client.gui.GuiDisplayPokecubeInfo;
 import pokecube.core.interfaces.pokemob.IHasCommands;
 import pokecube.core.interfaces.pokemob.IHasCommands.Command;
-import pokecube.core.interfaces.pokemob.commandhandlers.AttackNothingHandler;
-import pokecube.core.interfaces.pokemob.commandhandlers.ChangeFormHandler;
-import pokecube.core.interfaces.pokemob.commandhandlers.MoveIndexHandler;
-import pokecube.core.interfaces.pokemob.commandhandlers.SwapMovesHandler;
-import pokecube.core.interfaces.pokemob.commandhandlers.TeleportHandler;
 import pokecube.core.network.EntityProvider;
 import pokecube.core.network.pokemobs.PacketCommand;
 import pokecube.pokeplayer.Reference;
@@ -47,11 +42,6 @@ public class ClientSetupHandler
 		
 		IHasCommands.COMMANDHANDLERS.put(Command.ATTACKENTITY, AttackEntity.class);
 		IHasCommands.COMMANDHANDLERS.put(Command.ATTACKLOCATION, AttackLocation.class);
-		IHasCommands.COMMANDHANDLERS.put(Command.ATTACKNOTHING, AttackNothingHandler.class);
-		IHasCommands.COMMANDHANDLERS.put(Command.CHANGEFORM, ChangeFormHandler.class);
-		IHasCommands.COMMANDHANDLERS.put(Command.CHANGEMOVEINDEX, MoveIndexHandler.class);
 		IHasCommands.COMMANDHANDLERS.put(Command.STANCE, Stance.class);
-		IHasCommands.COMMANDHANDLERS.put(Command.SWAPMOVES, SwapMovesHandler.class);
-		IHasCommands.COMMANDHANDLERS.put(Command.TELEPORT, TeleportHandler.class);
 	}
 }
